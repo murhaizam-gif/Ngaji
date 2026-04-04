@@ -489,6 +489,22 @@ async function init(){
   document.getElementById('y-bulan').value=curYM()
   document.getElementById('cfg-url').value=SCRIPT_URL
 
+  // Register Service Worker untuk cache offline
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      console.log('[SW] Registered:', reg.scope)
+      // Kalau ada update SW baru, auto refresh
+      reg.addEventListener('updatefound', ()=>{
+        const newSW = reg.installing
+        newSW.addEventListener('statechange', ()=>{
+          if(newSW.state==='installed' && navigator.serviceWorker.controller){
+            toast('🔄 Update tersedia — refresh untuk dapatkan versi terbaru','warn')
+          }
+        })
+      })
+    }).catch(err => console.log('[SW] Error:', err))
+  }
+
   if(!SCRIPT_URL){ setSyncStatus('none'); return }
   await loadAllData()
 }
@@ -507,6 +523,20 @@ function tiga_bulan_terkini(){
 async function loadAllData(force=false){
   if(!force && CACHE_TS && (Date.now()-CACHE_TS)<CACHE_TTL && CACHE.keluarga.length){
     renderPapan(); return
+  }
+  // Kalau ada data dalam cache IDB, tunjuk dulu sebelum fetch
+  const savedCache = loadLocalCache()
+  if(savedCache && !force){
+    CACHE.keluarga = savedCache.keluarga||[]
+    CACHE.pelajar  = savedCache.pelajar||[]
+    REKOD_CACHE    = savedCache.rekodCache||{}
+    CACHE.rekod    = getAllRekodCache()
+    CACHE_TS       = savedCache.ts||0
+    renderPapan()
+    setSyncStatus('load')
+    // Update di background
+    fetchAndUpdate()
+    return
   }
   setSyncStatus('load')
   try{
@@ -542,12 +572,72 @@ async function loadAllData(force=false){
     bulan3.forEach(ym=>{ REKOD_CACHE[ym]=rekods3[ym] })
     CACHE.rekod = getAllRekodCache()
     CACHE_TS = Date.now()
+    saveLocalCache()
     setSyncStatus('ok')
     renderPapan()
   }catch(e){
     setSyncStatus('err')
     toast('Gagal memuatkan data: '+e.message,'err')
   }finally{ hideOverlay() }
+}
+
+/* ════════════════════════════════
+   LOCAL CACHE — localStorage untuk data persist
+════════════════════════════════ */
+function saveLocalCache(){
+  try{
+    const payload={ keluarga:CACHE.keluarga, pelajar:CACHE.pelajar, rekodCache:REKOD_CACHE, ts:CACHE_TS }
+    localStorage.setItem('mgj_cache', JSON.stringify(payload))
+  }catch(e){ console.warn('saveLocalCache gagal:',e) }
+}
+
+function loadLocalCache(){
+  try{
+    const raw=localStorage.getItem('mgj_cache')
+    if(!raw) return null
+    const d=JSON.parse(raw)
+    // Cache expired selepas 30 minit — paksa refresh
+    if(!d.ts||(Date.now()-d.ts)>30*60*1000) return null
+    return d
+  }catch(e){ return null }
+}
+
+// Fetch data baru di background, update UI bila siap
+async function fetchAndUpdate(){
+  try{
+    const bulan3=tiga_bulan_terkini()
+    let keluarga=[], pelajar=[], rekods3={}
+    try{
+      const [r, ...rBulans] = await Promise.all([
+        api({action:'getInit', ym:bulan3[0]}),
+        ...bulan3.slice(1).map(ym=>api({action:'getRekodBulan', ym}))
+      ])
+      keluarga = r.keluarga||[]
+      pelajar  = r.pelajar||[]
+      rekods3[bulan3[0]] = (r.rekod||[]).map(normTarikh)
+      bulan3.slice(1).forEach((ym,i)=>{ rekods3[ym]=(rBulans[i].data||[]).map(normTarikh) })
+    }catch(e1){
+      const [rK,rP,...rRs] = await Promise.all([
+        api({action:'getKeluarga'}),
+        api({action:'getPelajar'}),
+        ...bulan3.map(ym=>api({action:'getRekodBulan', ym}))
+      ])
+      keluarga = rK.data||[]
+      pelajar  = rP.data||[]
+      bulan3.forEach((ym,i)=>{ rekods3[ym]=(rRs[i].data||[]).map(normTarikh) })
+    }
+    CACHE.keluarga = keluarga
+    CACHE.pelajar  = pelajar
+    bulan3.forEach(ym=>{ REKOD_CACHE[ym]=rekods3[ym] })
+    CACHE.rekod = getAllRekodCache()
+    CACHE_TS = Date.now()
+    saveLocalCache()
+    setSyncStatus('ok')
+    renderPapan()
+  }catch(e){
+    setSyncStatus('err')
+    console.warn('fetchAndUpdate gagal:',e)
+  }
 }
 
 // Load rekod bulan tertentu on-demand
@@ -570,6 +660,7 @@ async function forceRefresh(){
   REKOD_CACHE = {}
   CACHE_TS = 0
   CACHE.rekod = []
+  localStorage.removeItem('mgj_cache')
   await loadAllData(true)
   toast('🔄 Data direfresh!')
 }
