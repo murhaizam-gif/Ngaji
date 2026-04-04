@@ -414,7 +414,10 @@ function getAllRekodCache(){
 /* ════════════════════════════════
    HELPERS
 ════════════════════════════════ */
-const today  = () => new Date().toISOString().split('T')[0]
+const today  = () => {
+  const d=new Date()
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')
+}
 const curYM  = () => today().slice(0,7)
 const ymOf   = d  => d.slice(0,7)
 const uid    = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6)
@@ -423,14 +426,14 @@ const fmtRM  = n  => 'RM'+parseFloat(n||0).toFixed(2)
 
 function fmtTarikh(d){
   if(!d)return'-'
-  const b=['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis']
+  const b=['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember']
   if(typeof d==='string'&&/^\d{4}-\d{2}-\d{2}/.test(d)){
     const[y,m,h]=d.split('-')
-    return h+' '+b[+m-1]+' '+y
+    return +h+'/'+b[+m-1]+'/'+y
   }
   const dt=new Date(d)
   if(isNaN(dt.getTime()))return String(d)
-  return dt.getDate()+' '+b[dt.getMonth()]+' '+dt.getFullYear()
+  return dt.getDate()+'/'+b[dt.getMonth()]+'/'+dt.getFullYear()
 }
 function fmtBulan(ym){
   if(!ym)return'-'
