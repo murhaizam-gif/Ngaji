@@ -846,6 +846,7 @@ function isikanDropPelajar(id){
 let isEdit=false, editUid=''
 
 function resetForm(){
+  document.getElementById('r-tarikh').value=today()
   document.getElementById('r-sesi').value='1'
   document.getElementById('r-catatan').value=''
   document.getElementById('r-muka').value=''
@@ -1089,7 +1090,7 @@ async function renderYuran(){
         '<div class="yfam-kids">'+
           row.childData.map(c=>
             '<div class="yfam-kid">'+
-              '<div><div class="yfam-kid-nama">'+c.p.nama+'</div><div class="yfam-kid-info">'+c.jSesi+' sesi · '+fmtRM(c.p.kadar)+'/sesi</div></div>'+
+              '<div><div class="yfam-kid-nama">'+c.p.nama+'</div><div class="yfam-kid-info">'+c.jSesi+' sesi</div></div>'+
               '<div class="yfam-kid-amt">'+fmtRM(c.jYuran)+'</div>'+
             '</div>'
           ).join('')+
@@ -1122,7 +1123,7 @@ function hantarWA(kUid,ym,mode){
     if(mode==='semua'){ msg+='👦 *'+p.nama.toUpperCase()+'*\n'+'─'.repeat(26)+'\n' }
     if(pr.length){
       pr.forEach(r=>{
-        msg+='📅 '+fmtTarikh(r.tarikh)+' — '+r.sesi+' sesi ('+fmtRM(r.yuran)+')\n'
+        msg+='📅 '+fmtTarikh(r.tarikh)+' — '+r.sesi+' sesi\n'
         if(r.muka){ msg+='   📖 m/s '+r.muka+(r.ayat?' | '+r.ayat:'')+(r.surah?' | '+r.surah:'')+'\n' }
         if(r.catatan) msg+='   📝 '+r.catatan+'\n'
       })
