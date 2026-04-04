@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kelas Mengaji</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+:root{
+  --bg:#f0ede8;--card:#fff;--border:#e2ddd6;
+  --hijau:#2d6a4f;--hijau-lg:#52b788;--hijau-lt:#d8f3dc;
+  --emas:#b5830a;--emas-lt:#fef3c7;
+  --merah:#c0392b;--merah-lt:#fdecea;
+  --ungu:#6d3a9c;--ungu-lt:#ede9fe;
+  --biru:#1a56a0;--biru-lt:#dbeafe;
+  --text:#1c1a17;--muted:#7a6e62;
+  --shadow:0 2px 14px rgba(0,0,0,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--hijau) 0%,#1b4332 100%);padding:13px 16px;position:sticky;top:0;z-index:200;box-shadow:0 4px 20px rgba(45,106,79,0.4)}
+.hdr{display:flex;align-items:center;gap:11px}
+.hdr-logo{width:42px;height:42px;background:rgba(255,255,255,0.13);border:1.5px solid rgba(255,255,255,0.2);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
+.hdr-text h1{font-size:16px;font-weight:900;color:#fff}
+.hdr-text p{font-size:10px;color:rgba(255,255,255,0.55);font-family:'JetBrains Mono',monospace;margin-top:1px}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.hdr-date{font-size:10px;color:rgba(255,255,255,0.65);font-family:'JetBrains Mono',monospace;text-align:right;line-height:1.7}
+.sync-badge{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.12);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.8)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#aaa;flex-shrink:0;transition:background .3s}
+.sync-dot.ok{background:#4ade80}
+.sync-dot.err{background:#f87171}
+.sync-dot.loading{background:#fbbf24;animation:blink 0.7s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* TABS */
+.tab-nav{display:flex;background:var(--card);border-bottom:2px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:68px;z-index:100;box-shadow:var(--shadow)}
+.tab-nav::-webkit-scrollbar{display:none}
+.tab-btn{flex:1;min-width:58px;padding:9px 3px 8px;background:none;border:none;color:var(--muted);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap}
+.tab-btn.active{color:var(--hijau);border-bottom-color:var(--hijau)}
+.tab-btn span{display:block;font-size:15px;margin-bottom:1px}
+
+/* CONTENT */
+.tab-content{display:none;padding:13px;animation:fadeUp .2s ease}
+.tab-content.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:15px;margin-bottom:11px;box-shadow:var(--shadow)}
+.card-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:13px;display:flex;align-items:center;gap:6px}
+
+/* SETUP BANNER */
+.setup-banner{background:linear-gradient(135deg,rgba(255,107,53,.12),rgba(255,107,53,.04));border:1.5px solid rgba(255,107,53,.3);border-radius:14px;padding:15px;margin-bottom:12px}
+.setup-banner h3{font-size:14px;font-weight:900;color:#c84b0a;margin-bottom:8px}
+.setup-banner ol{font-size:12px;line-height:2.2;padding-left:18px;color:var(--text)}
+.setup-banner ol li{font-weight:600}
+.setup-url{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-family:'JetBrains Mono',monospace;font-size:12px;margin-top:10px;word-break:break-all;color:var(--muted)}
+
+/* FORM */
+label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;margin-top:12px}
+label:first-child{margin-top:0}
+input,select,textarea{width:100%;background:var(--bg);border:2px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;outline:none;transition:border-color .2s,background .2s;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--hijau);background:#fff}
+input[type=number]{-moz-appearance:textfield}
+textarea{resize:vertical;min-height:65px;line-height:1.5}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:13px 18px;border-radius:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;border:none;transition:all .15s;width:100%;margin-top:11px}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.5;pointer-events:none}
+.btn-hijau{background:var(--hijau);color:#fff;box-shadow:0 4px 14px rgba(45,106,79,.3)}
+.btn-emas{background:var(--emas);color:#fff}
+.btn-merah{background:var(--merah);color:#fff}
+.btn-biru{background:var(--biru);color:#fff;box-shadow:0 4px 14px rgba(26,86,160,.25)}
+.btn-outline{background:transparent;border:2px solid var(--border);color:var(--text)}
+.btn-wa{background:#25d366;color:#fff;box-shadow:0 4px 14px rgba(37,211,102,.3)}
+.btn-ghost{background:var(--bg);color:var(--muted);border:1.5px solid var(--border)}
+.btn-sm{padding:6px 11px;font-size:11px;width:auto;margin-top:0;border-radius:8px}
+.btn-xs{padding:4px 8px;font-size:10px;width:auto;margin-top:0;border-radius:6px}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:11px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:13px 11px;text-align:center;box-shadow:var(--shadow)}
+.stat-num{font-size:25px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
+.stat-lbl{font-size:10px;font-weight:700;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+
+/* FAMILY CARD */
+.family-card{background:var(--bg);border:1.5px solid var(--border);border-radius:13px;margin-bottom:9px;overflow:hidden;animation:fadeUp .3s ease}
+.fam-header{display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer}
+.fam-avatar{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--biru),#1e3a8a);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#fff;flex-shrink:0}
+.fam-info{flex:1;min-width:0}
+.fam-nama{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fam-sub{font-size:10px;color:var(--muted);font-weight:600;margin-top:2px}
+.fam-chev{font-size:11px;color:var(--muted);transition:transform .2s;flex-shrink:0;margin-left:4px}
+.fam-chev.open{transform:rotate(180deg)}
+
+.children-list{border-top:1px solid var(--border);padding:10px}
+.child-item{display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--card);border-radius:9px;margin-bottom:6px;border:1px solid var(--border)}
+.child-item:last-child{margin-bottom:0}
+.child-av{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--hijau),var(--hijau-lg));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;color:#fff;flex-shrink:0}
+.child-info{flex:1;min-width:0}
+.child-nama{font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.child-rate{font-size:10px;color:var(--emas);font-family:'JetBrains Mono',monospace;font-weight:700;margin-top:1px}
+.child-bkmk{font-size:10px;color:var(--ungu);font-weight:700;margin-top:1px}
+
+.add-child{background:var(--hijau-lt);border:1.5px dashed var(--hijau-lg);border-radius:11px;padding:11px;margin-top:7px}
+.add-child label{color:var(--hijau)}
+
+/* REKOD ITEM */
+.rekod-item{background:var(--bg);border:1.5px solid var(--border);border-radius:11px;padding:12px;margin-bottom:7px;animation:fadeUp .3s ease}
+.rekod-top{display:flex;justify-content:space-between;align-items:flex-start}
+.rekod-nama{font-size:13px;font-weight:800}
+.rekod-fam{font-size:10px;color:var(--biru);font-weight:700;margin-top:1px}
+.rekod-meta{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px;font-weight:600}
+.rekod-yuran{font-size:12px;font-weight:800;color:var(--emas);font-family:'JetBrains Mono',monospace;margin-top:5px}
+.rekod-bkmk{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ungu);font-weight:700;background:var(--ungu-lt);border-radius:7px;padding:4px 9px;margin-top:5px}
+.rekod-cat{font-size:11px;color:var(--muted);margin-top:4px;font-style:italic;line-height:1.5}
+
+/* BADGE */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:800}
+.badge-sesi{background:var(--hijau-lt);color:var(--hijau)}
+.badge-edit{background:var(--emas-lt);color:var(--emas)}
+
+/* YURAN FAM */
+.yuran-fam{background:var(--bg);border:1.5px solid var(--border);border-radius:13px;margin-bottom:9px;overflow:hidden}
+.yfam-hdr{display:flex;align-items:center;gap:10px;padding:12px}
+.yfam-info{flex:1;min-width:0}
+.yfam-nama{font-size:13px;font-weight:800}
+.yfam-sub{font-size:10px;color:var(--muted);font-weight:600;margin-top:1px}
+.yfam-amt{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:900;color:var(--emas);text-align:right}
+.yfam-lbl{font-size:10px;color:var(--muted);font-weight:600;text-align:right;margin-top:1px}
+.yfam-kids{border-top:1px solid var(--border);padding:10px 12px}
+.yfam-kid{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dashed var(--border)}
+.yfam-kid:last-child{border-bottom:none}
+.yfam-kid-nama{font-size:12px;font-weight:800}
+.yfam-kid-info{font-size:10px;color:var(--muted);font-weight:600;margin-top:1px}
+.yfam-kid-amt{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--emas)}
+.wa-btns{display:flex;gap:6px;padding:0 12px 12px;flex-wrap:wrap}
+.wa-btns .btn{margin-top:0;font-size:11px;padding:8px 12px;border-radius:9px}
+
+/* FILTER */
+.filter-bar{display:flex;gap:7px;margin-bottom:9px;flex-wrap:wrap}
+.filter-bar input,.filter-bar select{flex:1;min-width:100px;margin:0}
+
+.seksyen-lbl{font-size:11px;font-weight:800;color:var(--hijau);font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin:13px 0 6px;padding:5px 10px;background:var(--hijau-lt);border-radius:7px;display:inline-block}
+
+/* LAPORAN */
+.lap-fam{background:var(--bg);border:1.5px solid var(--border);border-radius:13px;padding:13px;margin-bottom:9px}
+.lap-fam-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px}
+.lap-fam-nama{font-size:14px;font-weight:900}
+.lap-fam-tel{font-size:10px;color:var(--muted);font-weight:600;margin-top:2px}
+.lap-fam-total{font-size:19px;font-weight:900;color:var(--emas);font-family:'JetBrains Mono',monospace}
+.lap-child{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px;margin-top:7px}
+.lap-child-nama{font-size:13px;font-weight:800}
+.lap-child-info{font-size:10px;color:var(--muted);font-weight:600;margin-top:2px}
+.lap-child-amt{font-size:13px;font-weight:800;color:var(--emas);font-family:'JetBrains Mono',monospace;margin-top:3px}
+.lap-child-bkmk{font-size:10px;color:var(--ungu);font-weight:700;margin-top:3px}
+
+.hero{background:linear-gradient(135deg,var(--hijau),#1b4332);border-radius:15px;padding:17px;margin-bottom:11px;box-shadow:0 6px 24px rgba(45,106,79,.35)}
+.hero-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1px}
+.hero-amt{font-size:32px;font-weight:900;color:#fff;font-family:'JetBrains Mono',monospace;margin:4px 0 2px}
+.hero-sub{font-size:11px;color:rgba(255,255,255,.55);font-weight:600}
+
+.yuran-prev{margin-top:9px;padding:9px 12px;background:var(--emas-lt);border-radius:9px;border:1.5px solid #f0c04a;font-size:12px;font-weight:700;color:var(--emas)}
+.edit-banner{margin-top:9px;padding:9px 12px;background:var(--emas-lt);border-radius:9px;border:1.5px solid #f0c04a;font-size:11px;font-weight:700;color:var(--emas);display:none}
+.divider{height:1px;background:var(--border);margin:11px 0}
+
+.empty{text-align:center;padding:26px 16px;color:var(--muted)}
+.empty-ico{font-size:42px;margin-bottom:9px;opacity:.35}
+.empty p{font-size:12px;font-weight:600;line-height:1.7}
+
+/* LOADING OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.overlay.show{display:flex}
+.spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay-msg{color:#fff;font-size:13px;font-weight:700}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--hijau);color:#fff;padding:10px 22px;border-radius:22px;font-size:12px;font-weight:800;z-index:999;transition:transform .3s;white-space:nowrap;box-shadow:0 6px 24px rgba(45,106,79,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--merah)}
+.toast.warn{background:var(--emas)}
+
+/* CUSTOM CONFIRM MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:18px;padding:22px;max-width:320px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.2);animation:fadeUp .2s ease}
+.modal-title{font-size:15px;font-weight:900;color:var(--text);margin-bottom:8px}
+.modal-msg{font-size:13px;color:var(--muted);font-weight:600;line-height:1.6;margin-bottom:18px}
+.modal-btns{display:flex;gap:8px}
+.modal-btns .btn{margin-top:0;flex:1}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="hdr">
+    <div class="hdr-logo">🕌</div>
+    <div class="hdr-text"><h1>Kelas Mengaji</h1><p>Sistem Kehadiran & Yuran</p></div>
+    <div class="hdr-right">
+      <div class="sync-badge"><div class="sync-dot" id="syncDot"></div><span id="syncLbl">—</span></div>
+      <button onclick="forceRefresh()" style="background:rgba(255,255,255,0.13);border:1.5px solid rgba(255,255,255,0.2);border-radius:10px;padding:5px 9px;color:#fff;font-size:14px;cursor:pointer" title="Refresh Data">🔄</button>
+      <div class="hdr-date" id="hdrDate"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('papan')"    id="tab-papan">   <span>📊</span>Papan</button>
+  <button class="tab-btn"        onclick="showTab('rekod')"    id="tab-rekod">   <span>✏️</span>Rekod</button>
+  <button class="tab-btn"        onclick="showTab('keluarga')" id="tab-keluarga"><span>👨‍👩‍👧‍👦</span>Keluarga</button>
+  <button class="tab-btn"        onclick="showTab('sejarah')"  id="tab-sejarah"> <span>📜</span>Sejarah</button>
+  <button class="tab-btn"        onclick="showTab('yuran')"    id="tab-yuran">   <span>💰</span>Yuran</button>
+  <button class="tab-btn"        onclick="showTab('laporan')"  id="tab-laporan"> <span>📈</span>Laporan</button>
+</div>
+
+<!-- PAPAN -->
+<div id="tc-papan" class="tab-content active">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="st-k" style="color:var(--biru)">0</div><div class="stat-lbl">Keluarga</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-p" style="color:var(--hijau)">0</div><div class="stat-lbl">Pelajar</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-s" style="color:var(--hijau-lg)">0</div><div class="stat-lbl">Sesi Bulan Ini</div></div>
+    <div class="stat-card"><div class="stat-num" id="st-y" style="color:var(--emas);font-size:14px">RM0</div><div class="stat-lbl">Yuran Bulan Ini</div></div>
+  </div>
+  <div class="card"><div class="card-title">✏️ Rekod Terkini</div><div id="papan-terkini"></div></div>
+</div>
+
+<!-- REKOD -->
+<div id="tc-rekod" class="tab-content">
+  <div class="card">
+    <div class="card-title">✏️ Rekod Sesi Pelajar</div>
+
+    <label>Pilih Pelajar</label>
+    <select id="r-pelajar" onchange="onPilihPelajar()"><option value="">-- Pilih Pelajar --</option></select>
+    <div id="r-fam-info" style="font-size:11px;color:var(--biru);font-weight:700;margin-top:5px;display:none"></div>
+
+    <label>Tarikh Sesi</label>
+    <input type="date" id="r-tarikh" onchange="checkExisting()">
+
+    <div id="rekod-sedia-ada" style="display:none;margin-top:10px;background:var(--emas-lt);border:1.5px solid #f0c04a;border-radius:12px;padding:13px">
+      <div style="font-size:11px;font-weight:800;color:var(--emas);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">⚠️ Rekod Sedia Ada Untuk Tarikh Ini</div>
+      <div id="rekod-sedia-ada-info" style="font-size:12px;font-weight:600;color:var(--text);line-height:1.8"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;font-weight:600">Isi form di bawah untuk <strong>gantikan</strong> rekod ini.</div>
+    </div>
+    <div id="latest-rekod" style="display:none;margin-top:10px;background:var(--hijau-lt);border:1.5px solid var(--hijau-lg);border-radius:12px;padding:13px">
+      <div style="font-size:11px;font-weight:800;color:var(--hijau);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📋 Rekod Terkini Pelajar Ini</div>
+      <div id="latest-rekod-info" style="font-size:12px;font-weight:600;color:var(--text);line-height:1.8"></div>
+    </div>
+
+    <label>Bilangan Sesi</label>
+    <input type="number" id="r-sesi" min="1" max="20" value="1" oninput="updatePreview()">
+    <div class="yuran-prev" id="r-prev" style="display:none">💰 Yuran: <span id="r-prev-amt" style="font-family:'JetBrains Mono',monospace;font-size:14px"></span></div>
+
+    <label>Catatan</label>
+    <textarea id="r-catatan" placeholder="Contoh: Pelajar aktif, ada soalan tajwid..."></textarea>
+
+    <div class="divider"></div>
+    <div class="card-title">🔖 Bookmark — Bacaan Sesi Ini</div>
+    <div class="row2">
+      <div><label style="margin-top:0">Muka Surat</label><input type="number" id="r-muka" min="1" placeholder="Contoh: 45"></div>
+      <div><label style="margin-top:0">Ayat / Baris</label><input type="text" id="r-ayat" placeholder="Contoh: Ayat 12"></div>
+    </div>
+    <label>Surah / Tajuk</label>
+    <input type="text" id="r-surah" placeholder="Contoh: Al-Baqarah / Iqra Buku 3">
+
+    <button class="btn btn-hijau" id="btn-simpan" onclick="simpanRekod()">💾 Simpan Rekod</button>
+  </div>
+</div>
+
+<!-- KELUARGA -->
+<div id="tc-keluarga" class="tab-content">
+  <div class="card">
+    <div class="card-title">➕ Daftar Keluarga Baru</div>
+    <label>Nama Ibu Bapa / Penjaga</label>
+    <input type="text" id="k-nama" placeholder="Contoh: Tn. Hj. Ahmad bin Sulaiman">
+    <label>No. Telefon (WhatsApp)</label>
+    <input type="tel" id="k-tel" placeholder="Contoh: 0123456789">
+    <button class="btn btn-biru" onclick="tambahKeluarga()">➕ Daftar Keluarga</button>
+  </div>
+  <div class="card">
+    <div class="card-title">👨‍👩‍👧‍👦 Senarai Keluarga</div>
+    <input type="text" id="cari-k" placeholder="🔍 Cari nama..." oninput="renderKeluarga()" style="margin-bottom:9px">
+    <div id="senarai-k"></div>
+  </div>
+</div>
+
+<!-- SEJARAH -->
+<div id="tc-sejarah" class="tab-content">
+  <div class="filter-bar">
+    <input type="date" id="f-tarikh" onchange="renderSejarah()">
+    <select id="f-pelajar" onchange="renderSejarah()"><option value="">Semua Pelajar</option></select>
+  </div>
+  <input type="month" id="f-bulan" onchange="renderSejarah()" style="margin-bottom:9px">
+  <div id="senarai-s"></div>
+</div>
+
+<!-- YURAN -->
+<div id="tc-yuran" class="tab-content">
+  <div class="card">
+    <div class="card-title">💰 Semak Yuran Bulanan</div>
+    <label>Pilih Bulan</label>
+    <input type="month" id="y-bulan">
+    <button class="btn btn-emas" onclick="renderYuran()">🔍 Semak Yuran</button>
+  </div>
+  <div id="yuran-result"></div>
+</div>
+
+<!-- LAPORAN -->
+<div id="tc-laporan" class="tab-content">
+  <div class="card">
+    <div class="card-title">📈 Jana Laporan</div>
+    <label>Dari Tarikh</label><input type="date" id="l-dari">
+    <label>Hingga Tarikh</label><input type="date" id="l-hingga">
+    <button class="btn btn-hijau" onclick="janaLaporan()">📊 Jana Laporan</button>
+  </div>
+  <div id="laporan-result"></div>
+  <button class="btn btn-outline" id="btn-csv" style="display:none" onclick="exportCSV()">📤 Export CSV</button>
+  <div class="divider"></div>
+  <div class="card">
+    <div class="card-title">⚙️ Tetapan</div>
+    <label>URL Google Apps Script</label>
+    <input type="url" id="cfg-url" placeholder="https://script.google.com/macros/s/.../exec">
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="simpanURL()">💾 Simpan URL</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="pingServer()">🔗 Uji Sambungan</button>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <div class="overlay-msg" id="overlay-msg">Menyimpan data...</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- CUSTOM CONFIRM MODAL -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal-box">
+    <div class="modal-title" id="confirmTitle">Sahkan</div>
+    <div class="modal-msg" id="confirmMsg"></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="confirmResolve(false)">❌ Batal</button>
+      <button class="btn btn-merah" id="confirmOkBtn" onclick="confirmResolve(true)">✅ Ya, Teruskan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════
+   CUSTOM CONFIRM (replaces blocked native confirm)
+════════════════════════════════ */
+let _confirmResolve=null
+function customConfirm(msg,title='Sahkan',okLabel='✅ Ya, Teruskan'){
+  return new Promise(resolve=>{
+    _confirmResolve=resolve
+    document.getElementById('confirmMsg').textContent=msg
+    document.getElementById('confirmTitle').textContent=title
+    document.getElementById('confirmOkBtn').textContent=okLabel
+    document.getElementById('confirmModal').classList.add('show')
+  })
+}
+function confirmResolve(val){
+  document.getElementById('confirmModal').classList.remove('show')
+  if(_confirmResolve){ _confirmResolve(val); _confirmResolve=null }
+}
+
+/* ════════════════════════════════
+   CONFIG
+════════════════════════════════ */
+// Baca URL dari parameter ?url= dulu, kalau takda guna localStorage
+function getScriptURL(){
+  const param = new URLSearchParams(window.location.search).get('url')
+  if(param){
+    localStorage.setItem('mgj_url', param)  // auto-simpan untuk kegunaan offline
+    return param
+  }
+  return localStorage.getItem('mgj_url') || ''
+}
+let SCRIPT_URL = getScriptURL()
+
+/* ════════════════════════════════
+   IN-MEMORY CACHE (Smart — by bulan)
+════════════════════════════════ */
+let CACHE = { keluarga:[], pelajar:[], rekod:[] }
+let REKOD_CACHE = {}      // { 'YYYY-MM': [...rekod] }
+let CACHE_TS = 0          // timestamp last full refresh
+const CACHE_TTL = 5*60*1000  // 5 minit
+
+function normTarikh(r){
+  if(r.tarikh&&!/^\d{4}-\d{2}-\d{2}$/.test(r.tarikh)){
+    const dt=new Date(r.tarikh)
+    if(!isNaN(dt.getTime())){
+      r.tarikh=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')
+    }
+  }
+  return r
+}
+
+function getRekodBulanCache(ym){
+  // Gabung semua rekod yang ada dalam REKOD_CACHE untuk bulan ini
+  return REKOD_CACHE[ym]||[]
+}
+
+// Rekod aktif = bulan semasa dari cache
+function getAllRekodCache(){
+  return Object.values(REKOD_CACHE).flat()
+}
+
+/* ════════════════════════════════
+   HELPERS
+════════════════════════════════ */
+const today  = () => {
+  const d=new Date()
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')
+}
+const curYM  = () => today().slice(0,7)
+const ymOf   = d  => d.slice(0,7)
+const uid    = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6)
+const inisial = n => n.trim().split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)
+const fmtRM  = n  => 'RM'+parseFloat(n||0).toFixed(2)
+
+function fmtTarikh(d){
+  if(!d)return'-'
+  const b=['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember']
+  if(typeof d==='string'&&/^\d{4}-\d{2}-\d{2}/.test(d)){
+    const[y,m,h]=d.split('-')
+    return +h+'/'+b[+m-1]+'/'+y
+  }
+  const dt=new Date(d)
+  if(isNaN(dt.getTime()))return String(d)
+  return dt.getDate()+'/'+b[dt.getMonth()]+'/'+dt.getFullYear()
+}
+function fmtBulan(ym){
+  if(!ym)return'-'
+  const[y,m]=ym.split('-')
+  const b=['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember']
+  return b[+m-1]+' '+y
+}
+
+function toast(msg,type=''){
+  const t=document.getElementById('toast')
+  t.textContent=msg; t.className='toast show'+(type?' '+type:'')
+  clearTimeout(window._tt)
+  window._tt=setTimeout(()=>t.className='toast',2800)
+}
+
+function showOverlay(msg='Menyimpan data...'){
+  document.getElementById('overlay-msg').textContent=msg
+  document.getElementById('overlay').classList.add('show')
+}
+function hideOverlay(){ document.getElementById('overlay').classList.remove('show') }
+
+function setSyncStatus(status){
+  const dot=document.getElementById('syncDot')
+  const lbl=document.getElementById('syncLbl')
+  if(status==='ok')   {dot.className='sync-dot ok';   lbl.textContent='Tersambung'}
+  if(status==='err')  {dot.className='sync-dot err';  lbl.textContent='Gagal'}
+  if(status==='load') {dot.className='sync-dot loading'; lbl.textContent='Menyimpan...'}
+  if(status==='none') {dot.className='sync-dot';      lbl.textContent='Tiada URL'}
+}
+
+/* ════════════════════════════════
+   API
+════════════════════════════════ */
+async function api(body){
+  if(!SCRIPT_URL){ toast('Sila tetapkan URL Apps Script dahulu!','err'); throw new Error('No URL'); }
+  const resp = await fetch(SCRIPT_URL, {
+    method:'POST',
+    body: JSON.stringify(body)
+  })
+  const data = await resp.json()
+  if(!data.ok) throw new Error(data.msg||'Ralat')
+  return data
+}
+
+/* ════════════════════════════════
+   INIT
+════════════════════════════════ */
+async function init(){
+  const now=new Date()
+  const hari=['Ahd','Isn','Sel','Rab','Kha','Jum','Sab']
+  const bulanPendek=['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis']
+  document.getElementById('hdrDate').innerHTML=hari[now.getDay()]+', '+now.getDate()+' '+bulanPendek[now.getMonth()]+' '+now.getFullYear()
+  document.getElementById('r-tarikh').value=today()
+  document.getElementById('l-dari').value=curYM()+'-01'
+  document.getElementById('l-hingga').value=today()
+  document.getElementById('y-bulan').value=curYM()
+  document.getElementById('cfg-url').value=SCRIPT_URL
+
+  // Register Service Worker untuk cache offline
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      console.log('[SW] Registered:', reg.scope)
+      // Kalau ada update SW baru, auto refresh
+      reg.addEventListener('updatefound', ()=>{
+        const newSW = reg.installing
+        newSW.addEventListener('statechange', ()=>{
+          if(newSW.state==='installed' && navigator.serviceWorker.controller){
+            toast('🔄 Update tersedia — refresh untuk dapatkan versi terbaru','warn')
+          }
+        })
+      })
+    }).catch(err => console.log('[SW] Error:', err))
+  }
+
+  if(!SCRIPT_URL){ setSyncStatus('none'); return }
+  await loadAllData()
+}
+
+// Dapatkan array 3 bulan terkini: ['2026-04','2026-03','2026-02']
+function tiga_bulan_terkini(){
+  const result=[]
+  const now=new Date()
+  for(let i=0;i<3;i++){
+    const d=new Date(now.getFullYear(), now.getMonth()-i, 1)
+    result.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))
+  }
+  return result
+}
+
+async function loadAllData(force=false){
+  if(!force && CACHE_TS && (Date.now()-CACHE_TS)<CACHE_TTL && CACHE.keluarga.length){
+    renderPapan(); return
+  }
+  // Kalau ada data dalam cache IDB, tunjuk dulu sebelum fetch
+  const savedCache = loadLocalCache()
+  if(savedCache && !force){
+    CACHE.keluarga = savedCache.keluarga||[]
+    CACHE.pelajar  = savedCache.pelajar||[]
+    REKOD_CACHE    = savedCache.rekodCache||{}
+    CACHE.rekod    = getAllRekodCache()
+    CACHE_TS       = savedCache.ts||0
+    renderPapan()
+    setSyncStatus('load')
+    // Update di background
+    fetchAndUpdate()
+    return
+  }
+  setSyncStatus('load')
+  try{
+    showOverlay('Memuatkan data...')
+    const bulan3=tiga_bulan_terkini()
+    let keluarga=[], pelajar=[], rekods3={}
+    try{
+      // Cuba getInit untuk 3 bulan sekaligus (Apps Script baru)
+      const [r, ...rBulans] = await Promise.all([
+        api({action:'getInit', ym:bulan3[0]}),
+        ...bulan3.slice(1).map(ym=>api({action:'getRekodBulan', ym}))
+      ])
+      keluarga = r.keluarga||[]
+      pelajar  = r.pelajar||[]
+      rekods3[bulan3[0]] = (r.rekod||[]).map(normTarikh)
+      bulan3.slice(1).forEach((ym,i)=>{
+        rekods3[ym] = (rBulans[i].data||[]).map(normTarikh)
+      })
+    }catch(e1){
+      // Fallback — 3 call berasingan
+      toast('⚠️ Guna mod lama...','warn')
+      const [rK,rP,...rRs] = await Promise.all([
+        api({action:'getKeluarga'}),
+        api({action:'getPelajar'}),
+        ...bulan3.map(ym=>api({action:'getRekodBulan', ym}))
+      ])
+      keluarga = rK.data||[]
+      pelajar  = rP.data||[]
+      bulan3.forEach((ym,i)=>{ rekods3[ym]=(rRs[i].data||[]).map(normTarikh) })
+    }
+    CACHE.keluarga = keluarga
+    CACHE.pelajar  = pelajar
+    bulan3.forEach(ym=>{ REKOD_CACHE[ym]=rekods3[ym] })
+    CACHE.rekod = getAllRekodCache()
+    CACHE_TS = Date.now()
+    saveLocalCache()
+    setSyncStatus('ok')
+    renderPapan()
+  }catch(e){
+    setSyncStatus('err')
+    toast('Gagal memuatkan data: '+e.message,'err')
+  }finally{ hideOverlay() }
+}
+
+/* ════════════════════════════════
+   LOCAL CACHE — localStorage untuk data persist
+════════════════════════════════ */
+function saveLocalCache(){
+  try{
+    const payload={ keluarga:CACHE.keluarga, pelajar:CACHE.pelajar, rekodCache:REKOD_CACHE, ts:CACHE_TS }
+    localStorage.setItem('mgj_cache', JSON.stringify(payload))
+  }catch(e){ console.warn('saveLocalCache gagal:',e) }
+}
+
+function loadLocalCache(){
+  try{
+    const raw=localStorage.getItem('mgj_cache')
+    if(!raw) return null
+    const d=JSON.parse(raw)
+    // Cache expired selepas 30 minit — paksa refresh
+    if(!d.ts||(Date.now()-d.ts)>30*60*1000) return null
+    return d
+  }catch(e){ return null }
+}
+
+// Fetch data baru di background, update UI bila siap
+async function fetchAndUpdate(){
+  try{
+    const bulan3=tiga_bulan_terkini()
+    let keluarga=[], pelajar=[], rekods3={}
+    try{
+      const [r, ...rBulans] = await Promise.all([
+        api({action:'getInit', ym:bulan3[0]}),
+        ...bulan3.slice(1).map(ym=>api({action:'getRekodBulan', ym}))
+      ])
+      keluarga = r.keluarga||[]
+      pelajar  = r.pelajar||[]
+      rekods3[bulan3[0]] = (r.rekod||[]).map(normTarikh)
+      bulan3.slice(1).forEach((ym,i)=>{ rekods3[ym]=(rBulans[i].data||[]).map(normTarikh) })
+    }catch(e1){
+      const [rK,rP,...rRs] = await Promise.all([
+        api({action:'getKeluarga'}),
+        api({action:'getPelajar'}),
+        ...bulan3.map(ym=>api({action:'getRekodBulan', ym}))
+      ])
+      keluarga = rK.data||[]
+      pelajar  = rP.data||[]
+      bulan3.forEach((ym,i)=>{ rekods3[ym]=(rRs[i].data||[]).map(normTarikh) })
+    }
+    CACHE.keluarga = keluarga
+    CACHE.pelajar  = pelajar
+    bulan3.forEach(ym=>{ REKOD_CACHE[ym]=rekods3[ym] })
+    CACHE.rekod = getAllRekodCache()
+    CACHE_TS = Date.now()
+    saveLocalCache()
+    setSyncStatus('ok')
+    renderPapan()
+  }catch(e){
+    setSyncStatus('err')
+    console.warn('fetchAndUpdate gagal:',e)
+  }
+}
+
+// Load rekod bulan tertentu on-demand
+async function loadRekodBulan(ym){
+  if(REKOD_CACHE[ym]) return  // Dah ada dalam cache, skip
+  setSyncStatus('load')
+  try{
+    const r = await api({action:'getRekodBulan', ym})
+    REKOD_CACHE[ym] = (r.data||[]).map(normTarikh)
+    CACHE.rekod = getAllRekodCache()
+    setSyncStatus('ok')
+  }catch(e){
+    setSyncStatus('err')
+    toast('Gagal memuatkan rekod: '+e.message,'err')
+  }
+}
+
+// Force refresh — padam semua cache dulu
+async function forceRefresh(){
+  REKOD_CACHE = {}
+  CACHE_TS = 0
+  CACHE.rekod = []
+  localStorage.removeItem('mgj_cache')
+  await loadAllData(true)
+  toast('🔄 Data direfresh!')
+}
+
+/* ════════════════════════════════
+   TABS
+════════════════════════════════ */
+async function showTab(name){
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'))
+  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'))
+  document.getElementById('tc-'+name).classList.add('active')
+  document.getElementById('tab-'+name).classList.add('active')
+  if(name==='papan')    renderPapan()
+  if(name==='rekod')    { isikanDropPelajar('r-pelajar'); updatePreview() }
+  if(name==='keluarga') renderKeluarga()
+  if(name==='sejarah')  { isikanDropPelajar('f-pelajar'); await renderSejarah() }
+  if(name==='yuran')    await renderYuran()
+}
+
+/* ════════════════════════════════
+   TETAPAN / URL
+════════════════════════════════ */
+function simpanURL(){
+  const url=document.getElementById('cfg-url').value.trim()
+  if(!url){ toast('Sila masukkan URL!','err'); return }
+  SCRIPT_URL=url
+  localStorage.setItem('mgj_url',url)
+  toast('✅ URL disimpan!')
+  loadAllData()
+}
+
+async function pingServer(){
+  if(!SCRIPT_URL){ toast('Tiada URL!','err'); return }
+  setSyncStatus('load')
+  try{
+    const r=await api({action:'ping'})
+    setSyncStatus('ok')
+    toast('✅ '+r.msg)
+  }catch(e){ setSyncStatus('err'); toast('❌ '+e.message,'err') }
+}
+
+/* ════════════════════════════════
+   KELUARGA
+════════════════════════════════ */
+async function tambahKeluarga(){
+  const nama=document.getElementById('k-nama').value.trim()
+  const tel=document.getElementById('k-tel').value.trim()
+  if(!nama){ toast('Sila masukkan nama!','err'); return }
+  if(!tel)  { toast('Sila masukkan no. telefon!','err'); return }
+  const obj={uid:uid(),nama,tel,daftar:today()}
+  showOverlay('Mendaftar keluarga...')
+  setSyncStatus('load')
+  try{
+    await api({action:'saveKeluarga',data:obj})
+    CACHE.keluarga.push(obj)
+    document.getElementById('k-nama').value=''
+    document.getElementById('k-tel').value=''
+    renderKeluarga()
+    setSyncStatus('ok')
+    toast('✅ Keluarga didaftarkan!')
+  }catch(e){ setSyncStatus('err'); toast('❌ '+e.message,'err') }
+  finally{ hideOverlay() }
+}
+
+async function hapusKeluarga(kUid){
+  const anak=CACHE.pelajar.filter(p=>p.keluargaUid===kUid)
+  if(anak.length){ toast('Padam '+anak.length+' anak dahulu!','err'); return }
+  if(!await customConfirm('Adakah anda pasti ingin memadam keluarga ini?','🗑️ Padam Keluarga','🗑️ Ya, Padam')) return
+  showOverlay('Memadam keluarga...')
+  setSyncStatus('load')
+  try{
+    await api({action:'deleteKeluarga',uid:kUid})
+    CACHE.keluarga=CACHE.keluarga.filter(k=>k.uid!==kUid)
+    renderKeluarga()
+    setSyncStatus('ok')
+    toast('🗑️ Keluarga dipadam','err')
+  }catch(e){ setSyncStatus('err'); toast('❌ '+e.message,'err') }
+  finally{ hideOverlay() }
+}
+
+async function tambahAnak(kUid){
+  const nama=document.getElementById('an-n-'+kUid).value.trim()
+  const kadar=parseFloat(document.getElementById('an-k-'+kUid).value)
+  if(!nama)       { toast('Sila masukkan nama anak!','err'); return }
+  if(!kadar||kadar<=0){ toast('Sila masukkan kadar yuran!','err'); return }
+  const obj={uid:uid(),nama,kadar:String(kadar),keluargaUid:kUid,daftar:today()}
+  showOverlay('Mendaftar pelajar...')
+  setSyncStatus('load')
+  try{
+    await api({action:'savePelajar',data:obj})
+    CACHE.pelajar.push(obj)
+    document.getElementById('an-n-'+kUid).value=''
+    document.getElementById('an-k-'+kUid).value=''
+    renderKeluarga()
+    setSyncStatus('ok')
+    toast('✅ Pelajar ditambah!')
+  }catch(e){ setSyncStatus('err'); toast('❌ '+e.message,'err') }
+  finally{ hideOverlay() }
+}
+
+async function hapusAnak(pUid){
+  if(!await customConfirm('Adakah anda pasti ingin memadam pelajar ini?','🗑️ Padam Pelajar','🗑️ Ya, Padam')) return
+  showOverlay('Memadam pelajar...')
+  setSyncStatus('load')
+  try{
+    await api({action:'deletePelajar',uid:pUid})
+    CACHE.pelajar=CACHE.pelajar.filter(p=>p.uid!==pUid)
+    renderKeluarga()
+    setSyncStatus('ok')
+    toast('🗑️ Pelajar dipadam','err')
+  }catch(e){ setSyncStatus('err'); toast('❌ '+e.message,'err') }
+  finally{ hideOverlay() }
+}
+
+function toggleFam(kUid){
+  const body=document.getElementById('fb-'+kUid)
+  const chev=document.getElementById('fc-'+kUid)
+  const open=body.style.display!=='none'
+  body.style.display=open?'none':'block'
+  chev.classList.toggle('open',!open)
+}
+
+function renderKeluarga(){
+  const cari=(document.getElementById('cari-k')?.value||'').toLowerCase()
+  const list=CACHE.keluarga.filter(k=>k.nama.toLowerCase().includes(cari))
+  const el=document.getElementById('senarai-k')
+  if(!list.length){ el.innerHTML='<div class="empty"><div class="empty-ico">👨‍👩‍👧‍👦</div><p>Tiada keluarga didaftarkan.<br>Sila tambah keluarga baru.</p></div>'; return }
+  el.innerHTML=list.map(k=>{
+    const anak=CACHE.pelajar.filter(p=>p.keluargaUid===k.uid)
+    const kids=anak.length?anak.map(p=>{
+      const lb=CACHE.rekod.filter(r=>r.pelajarUid===p.uid&&r.muka).sort((a,b)=>b.tarikh.localeCompare(a.tarikh))[0]
+      return '<div class="child-item">'+
+        '<div class="child-av">'+inisial(p.nama)+'</div>'+
+        '<div class="child-info">'+
+          '<div class="child-nama">'+p.nama+'</div>'+
+          '<div class="child-rate">'+fmtRM(p.kadar)+'/sesi</div>'+
+          (lb?'<div class="child-bkmk">🔖 m/s '+lb.muka+(lb.ayat?' · '+lb.ayat:'')+(lb.surah?' · '+lb.surah:'')+'</div>':'')+
+        '</div>'+
+        '<button class="btn btn-merah btn-xs" onclick="hapusAnak(\''+p.uid+'\')">🗑️</button>'+
+      '</div>'
+    }).join(''):'<div style="font-size:12px;color:var(--muted);text-align:center;padding:6px">Tiada anak lagi</div>'
+
+    return '<div class="family-card">'+
+      '<div class="fam-header" onclick="toggleFam(\''+k.uid+'\')">'+
+        '<div class="fam-avatar">'+inisial(k.nama)+'</div>'+
+        '<div class="fam-info"><div class="fam-nama">'+k.nama+'</div><div class="fam-sub">📱 '+k.tel+' · '+anak.length+' anak</div></div>'+
+        '<button class="btn btn-merah btn-xs" onclick="event.stopPropagation();hapusKeluarga(\''+k.uid+'\')">🗑️</button>'+
+        '<div class="fam-chev" id="fc-'+k.uid+'">▼</div>'+
+      '</div>'+
+      '<div id="fb-'+k.uid+'" style="display:none">'+
+        '<div class="children-list">'+kids+
+          '<div class="add-child">'+
+            '<div style="font-size:11px;font-weight:800;color:var(--hijau);margin-bottom:7px">➕ Tambah Anak</div>'+
+            '<label style="margin-top:0;color:var(--hijau)">Nama Anak</label>'+
+            '<input type="text" id="an-n-'+k.uid+'" placeholder="Nama pelajar">'+
+            '<label style="color:var(--hijau)">Kadar Yuran/Sesi (RM)</label>'+
+            '<input type="number" id="an-k-'+k.uid+'" placeholder="Contoh: 8.00" min="0" step="0.50">'+
+            '<button class="btn btn-hijau btn-sm" style="margin-top:7px;width:100%" onclick="tambahAnak(\''+k.uid+'\')">➕ Tambah</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'
+  }).join('')
+}
+
+/* ════════════════════════════════
+   DROP PELAJAR
+════════════════════════════════ */
+function isikanDropPelajar(id){
+  const sel=document.getElementById(id)
+  const cur=sel.value
+  const pre=id==='f-pelajar'?'<option value="">Semua Pelajar</option>':'<option value="">-- Pilih Pelajar --</option>'
+  sel.innerHTML=pre+CACHE.pelajar.map(p=>{
+    const k=CACHE.keluarga.find(x=>x.uid===p.keluargaUid)
+    return '<option value="'+p.uid+'">'+(k?p.nama+' ('+k.nama+')':p.nama)+'</option>'
+  }).join('')
+  if(cur) sel.value=cur
+}
+
+/* ════════════════════════════════
+   REKOD SESI
+════════════════════════════════ */
+let isEdit=false, editUid=''
+
+function resetForm(){
+  document.getElementById('r-tarikh').value=today()
+  document.getElementById('r-sesi').value='1'
+  document.getElementById('r-catatan').value=''
+  document.getElementById('r-muka').value=''
+  document.getElementById('r-ayat').value=''
+  document.getElementById('r-surah').value=''
+  document.getElementById('rekod-sedia-ada').style.display='none'
+  document.getElementById('latest-rekod').style.display='none'
+  document.getElementById('btn-simpan').textContent='💾 Simpan Rekod'
+  isEdit=false; editUid=''
+  updatePreview()
+}
+
+function onPilihPelajar(){
+  // Bug 1: reset form bila tukar pelajar
+  resetForm()
+  const pUid=document.getElementById('r-pelajar').value
+  const infoEl=document.getElementById('r-fam-info')
+  if(!pUid){ infoEl.style.display='none'; return }
+  const p=CACHE.pelajar.find(x=>x.uid===pUid)
+  const k=p?CACHE.keluarga.find(x=>x.uid===p.keluargaUid):null
+  if(k){ infoEl.textContent='👨‍👩‍👧‍👦 Keluarga: '+k.nama; infoEl.style.display='block' }
+  updatePreview()
+  checkExisting()
+}
+
+function checkExisting(){
+  const pUid=document.getElementById('r-pelajar').value
+  const tarikh=document.getElementById('r-tarikh').value
+  const panel=document.getElementById('rekod-sedia-ada')
+  const info=document.getElementById('rekod-sedia-ada-info')
+  const latestPanel=document.getElementById('latest-rekod')
+  const latestInfo=document.getElementById('latest-rekod-info')
+  const btnSimpan=document.getElementById('btn-simpan')
+  if(!pUid||!tarikh){ isEdit=false; editUid=''; panel.style.display='none'; latestPanel.style.display='none'; btnSimpan.textContent='💾 Simpan Rekod'; return }
+  const existing=getAllRekodCache().find(r=>r.pelajarUid===pUid&&r.tarikh===tarikh)
+  if(existing){
+    // Ada rekod pada tarikh ini — papar dalam panel kuning
+    isEdit=true; editUid=existing.uid
+    let html='📅 Tarikh: <strong>'+fmtTarikh(existing.tarikh)+'</strong><br>'
+    html+='🕌 Sesi: <strong>'+existing.sesi+' sesi</strong> | 💰 Yuran: <strong>'+fmtRM(existing.yuran)+'</strong><br>'
+    if(existing.muka) html+='🔖 m/s '+existing.muka+(existing.ayat?' · '+existing.ayat:'')+(existing.surah?' · '+existing.surah:'')+'<br>'
+    if(existing.catatan) html+='📝 '+existing.catatan
+    info.innerHTML=html
+    panel.style.display='block'
+    latestPanel.style.display='none'
+    btnSimpan.textContent='✏️ Kemaskini Rekod'
+  } else {
+    // Bug 2: tiada rekod pada tarikh ini — papar rekod terkini dalam panel hijau
+    isEdit=false; editUid=''
+    panel.style.display='none'
+    btnSimpan.textContent='💾 Simpan Rekod'
+    const latest=getAllRekodCache().filter(r=>r.pelajarUid===pUid).sort((a,b)=>b.tarikh.localeCompare(a.tarikh))[0]
+    if(latest){
+      let html='📅 Tarikh: <strong>'+fmtTarikh(latest.tarikh)+'</strong><br>'
+      html+='🕌 Sesi: <strong>'+latest.sesi+' sesi</strong> | 💰 Yuran: <strong>'+fmtRM(latest.yuran)+'</strong><br>'
+      if(latest.muka) html+='🔖 m/s '+latest.muka+(latest.ayat?' · '+latest.ayat:'')+(latest.surah?' · '+latest.surah:'')+'<br>'
+      if(latest.catatan) html+='📝 '+latest.catatan
+      latestInfo.innerHTML=html
+      latestPanel.style.display='block'
+    } else {
+      latestPanel.style.display='none'
+    }
+  }
+}
+
+function updatePreview(){
+  const pUid=document.getElementById('r-pelajar').value
+  const sesi=parseInt(document.getElementById('r-sesi')?.value)||1
+  const p=CACHE.pelajar.find(x=>x.uid===pUid)
+  const prev=document.getElementById('r-prev')
+  if(p&&sesi>0){ document.getElementById('r-prev-amt').textContent=fmtRM(p.kadar*sesi)+' ('+sesi+' × '+fmtRM(p.kadar)+')'; prev.style.display='block' }
+  else prev.style.display='none'
+}
+
+async function simpanRekod(){
+  const pUid=document.getElementById('r-pelajar').value
+  const tarikh=document.getElementById('r-tarikh').value
+  const sesi=parseInt(document.getElementById('r-sesi').value)
+  const catatan=document.getElementById('r-catatan').value.trim()
+  const muka=document.getElementById('r-muka').value.trim()
+  const ayat=document.getElementById('r-ayat').value.trim()
+  const surah=document.getElementById('r-surah').value.trim()
+
+  if(!pUid)        { toast('Sila pilih pelajar!','err'); return }
+  if(!tarikh)      { toast('Sila pilih tarikh!','err'); return }
+  if(!sesi||sesi<1){ toast('Bilangan sesi mesti ≥ 1!','err'); return }
+
+  // Warning jika muka surat / ayat kosong (bukan mandatory)
+  if(!muka&&!ayat){
+    const teruskan=await customConfirm('Muka surat dan ayat tidak diisi. Rekod akan disimpan tanpa bookmark bacaan. Teruskan?','📖 Bookmark Kosong','💾 Ya, Simpan Tanpa Bookmark')
+    if(!teruskan) return
+  } else if(!muka){
+    const teruskan=await customConfirm('Muka surat tidak diisi. Teruskan simpan?','📖 Muka Surat Kosong','💾 Ya, Teruskan')
+    if(!teruskan) return
+  } else if(!ayat){
+    const teruskan=await customConfirm('Nombor ayat tidak diisi. Teruskan simpan?','📖 Ayat Kosong','💾 Ya, Teruskan')
+    if(!teruskan) return
+  }
+
+  // Confirmation jika edit
+  if(isEdit){
+    if(!await customConfirm('Rekod sedia ada akan digantikan dengan data baru. Teruskan?','✏️ Kemaskini Rekod','✏️ Ya, Kemaskini')) return
+  }
+
+  const p=CACHE.pelajar.find(x=>x.uid===pUid)
+  const k=CACHE.keluarga.find(x=>x.uid===p.keluargaUid)
+  const yuran=String(parseFloat(p.kadar)*sesi)
+  const obj={
+    uid: isEdit ? editUid : uid(),
+    pelajarUid:pUid, pelajarNama:p.nama,
+    keluargaUid:p.keluargaUid||'',
+    tarikh, sesi:String(sesi), yuran, catatan, muka, ayat, surah,
+    simpanPada:new Date().toISOString()
+  }
+
+  const wasEdit=isEdit
+  showOverlay(wasEdit?'Mengemaskini rekod...':'Menyimpan rekod...')
+  setSyncStatus('load')
+  try{
+    await api({action:'saveRekod', data:obj})
+    // Update REKOD_CACHE — buang entry lama, push baru ke bulan betul
+    const ymObj=obj.tarikh.slice(0,7)
+    if(!REKOD_CACHE[ymObj]) REKOD_CACHE[ymObj]=[]
+    REKOD_CACHE[ymObj]=REKOD_CACHE[ymObj].filter(r=>r.uid!==obj.uid&&!(r.pelajarUid===obj.pelajarUid&&r.tarikh===obj.tarikh))
+    REKOD_CACHE[ymObj].push(obj)
+    CACHE.rekod=getAllRekodCache()
+    // Reset form
+    document.getElementById('r-sesi').value='1'
+    document.getElementById('r-catatan').value=''
+    isEdit=false; editUid=''
+    document.getElementById('rekod-sedia-ada').style.display='none'
+    document.getElementById('latest-rekod').style.display='none'
+    document.getElementById('btn-simpan').textContent='💾 Simpan Rekod'
+    updatePreview()
+    setSyncStatus('ok')
+    toast('✅ Rekod '+(wasEdit?'dikemaskini':'disimpan')+'! Yuran: '+fmtRM(yuran))
+  }catch(e){ setSyncStatus('err'); toast('❌ '+e.message,'err') }
+  finally{ hideOverlay() }
+}
+
+/* ════════════════════════════════
+   SEJARAH
+════════════════════════════════ */
+async function renderSejarah(){
+  const tDate=document.getElementById('f-tarikh').value
+  const tBulan=document.getElementById('f-bulan').value
+  const tPelajar=document.getElementById('f-pelajar').value
+  const ymTarget = tBulan || (tDate?tDate.slice(0,7):curYM())
+  // Tunjuk loading dulu
+  const el=document.getElementById('senarai-s')
+  if(!REKOD_CACHE[ymTarget]) el.innerHTML='<div class="empty"><div class="empty-ico">⏳</div><p>Memuatkan rekod...</p></div>'
+  await loadRekodBulan(ymTarget)
+  let rekods=[...getAllRekodCache()]
+  if(tDate)    rekods=rekods.filter(r=>r.tarikh===tDate)
+  else if(tBulan) rekods=rekods.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===tBulan)
+  if(tPelajar) rekods=rekods.filter(r=>r.pelajarUid===tPelajar)
+  rekods.sort((a,b)=>b.tarikh.localeCompare(a.tarikh)||b.simpanPada.localeCompare(a.simpanPada))
+  if(!rekods.length){ el.innerHTML='<div class="empty"><div class="empty-ico">📜</div><p>Tiada rekod ditemui</p></div>'; return }
+  const grp={}
+  rekods.forEach(r=>{ if(!grp[r.tarikh])grp[r.tarikh]=[]; grp[r.tarikh].push(r) })
+  el.innerHTML=Object.keys(grp).sort().reverse().map(d=>
+    '<div class="seksyen-lbl">📅 '+fmtTarikh(d)+'</div>'+
+    grp[d].map(r=>{
+      const k=CACHE.keluarga.find(x=>x.uid===r.keluargaUid)
+      return '<div class="rekod-item">'+
+        '<div class="rekod-top">'+
+          '<div><div class="rekod-nama">'+r.pelajarNama+'</div>'+
+          (k?'<div class="rekod-fam">👨‍👩‍👧‍👦 '+k.nama+'</div>':'')+
+          '<div class="rekod-meta">'+r.tarikh+'</div></div>'+
+          '<div style="display:flex;gap:5px;align-items:center">'+
+            '<span class="badge badge-sesi">'+r.sesi+' Sesi</span>'+
+            '<button class="btn btn-merah btn-xs" onclick="hapusRekod(\''+r.uid+'\')">🗑️</button>'+
+          '</div>'+
+        '</div>'+
+        '<div class="rekod-yuran">💰 '+fmtRM(r.yuran)+'</div>'+
+        (r.muka?'<div class="rekod-bkmk">🔖 m/s '+r.muka+(r.ayat?' · '+r.ayat:'')+(r.surah?' · '+r.surah:'')+'</div>':'')+
+        (r.catatan?'<div class="rekod-cat">📝 '+r.catatan+'</div>':'')+
+      '</div>'
+    }).join('')
+  ).join('')
+}
+
+async function hapusRekod(rUid){
+  if(!await customConfirm('Adakah anda pasti ingin memadam rekod ini?','🗑️ Padam Rekod','🗑️ Ya, Padam')) return
+  showOverlay('Memadam rekod...')
+  setSyncStatus('load')
+  try{
+    await api({action:'deleteRekod',uid:rUid})
+    // Buang dari REKOD_CACHE juga
+    Object.keys(REKOD_CACHE).forEach(ym=>{
+      REKOD_CACHE[ym]=REKOD_CACHE[ym].filter(r=>r.uid!==rUid)
+    })
+    CACHE.rekod=getAllRekodCache()
+    renderSejarah()
+    setSyncStatus('ok')
+    toast('🗑️ Rekod dipadam','err')
+  }catch(e){ setSyncStatus('err'); toast('❌ '+e.message,'err') }
+  finally{ hideOverlay() }
+}
+
+/* ════════════════════════════════
+   YURAN
+════════════════════════════════ */
+async function renderYuran(){
+  const ym=document.getElementById('y-bulan').value||curYM()
+  const el=document.getElementById('yuran-result')
+  if(!REKOD_CACHE[ym]) el.innerHTML='<div class="empty"><div class="empty-ico">⏳</div><p>Memuatkan rekod...</p></div>'
+  await loadRekodBulan(ym)
+  const rekods=getAllRekodCache().filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym)
+  if(!CACHE.keluarga.length){ el.innerHTML='<div class="empty"><div class="empty-ico">💰</div><p>Tiada keluarga</p></div>'; return }
+
+  let totalAll=0
+  const rows=CACHE.keluarga.map(k=>{
+    const anak=CACHE.pelajar.filter(p=>p.keluargaUid===k.uid)
+    const childData=anak.map(p=>{
+      const pr=rekods.filter(r=>r.pelajarUid===p.uid)
+      const jSesi=pr.reduce((a,r)=>a+(+r.sesi||0),0)
+      const jYuran=pr.reduce((a,r)=>a+(+r.yuran||0),0)
+      return{p,jSesi,jYuran}
+    })
+    const total=childData.reduce((a,c)=>a+c.jYuran,0)
+    totalAll+=total
+    return{k,childData,total}
+  }).filter(r=>r.total>0)
+
+  if(!rows.length){ el.innerHTML='<div class="empty"><div class="empty-ico">💰</div><p>Tiada rekod untuk '+fmtBulan(ym)+'</p></div>'; return }
+
+  el.innerHTML=
+    '<div class="hero" style="padding:14px;border-radius:13px">'+
+      '<div class="hero-lbl">Jumlah Yuran</div>'+
+      '<div class="hero-amt">'+fmtRM(totalAll)+'</div>'+
+      '<div class="hero-sub">'+fmtBulan(ym)+'</div>'+
+    '</div>'+
+    rows.map(row=>
+      '<div class="yuran-fam">'+
+        '<div class="yfam-hdr">'+
+          '<div class="fam-avatar">'+inisial(row.k.nama)+'</div>'+
+          '<div class="yfam-info"><div class="yfam-nama">'+row.k.nama+'</div><div class="yfam-sub">'+row.childData.length+' anak</div></div>'+
+          '<div><div class="yfam-amt">'+fmtRM(row.total)+'</div><div class="yfam-lbl">Jumlah</div></div>'+
+        '</div>'+
+        '<div class="yfam-kids">'+
+          row.childData.map(c=>
+            '<div class="yfam-kid">'+
+              '<div><div class="yfam-kid-nama">'+c.p.nama+'</div><div class="yfam-kid-info">'+c.jSesi+' sesi</div></div>'+
+              '<div class="yfam-kid-amt">'+fmtRM(c.jYuran)+'</div>'+
+            '</div>'
+          ).join('')+
+        '</div>'+
+        '<div class="wa-btns">'+
+          '<button class="btn btn-wa" onclick="hantarWA(\''+row.k.uid+'\',\''+ym+'\',\'semua\')">📲 WA Semua Anak</button>'+
+          (row.childData.length>1?row.childData.map(c=>'<button class="btn btn-outline btn-sm" onclick="hantarWA(\''+row.k.uid+'\',\''+ym+'\',\''+c.p.uid+'\')">📲 '+c.p.nama.split(' ')[0]+'</button>').join(''):'')+
+        '</div>'+
+      '</div>'
+    ).join('')
+}
+
+/* ════════════════════════════════
+   WHATSAPP
+════════════════════════════════ */
+function hantarWA(kUid,ym,mode){
+  const k=CACHE.keluarga.find(x=>x.uid===kUid)
+  if(!k){ toast('Keluarga tidak dijumpai','err'); return }
+  const rekods=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym)
+  const anak=mode==='semua'?CACHE.pelajar.filter(p=>p.keluargaUid===kUid):CACHE.pelajar.filter(p=>p.uid===mode)
+  if(!anak.length){ toast('Tiada pelajar!','err'); return }
+  let msg='Assalamualaikum w.b.t,\n\n'
+  msg+=(mode==='semua'?'Berikut rekod kehadiran anak-anak *'+k.nama+'*':'Berikut rekod kehadiran *'+anak[0].nama+'*')+' bagi bulan *'+fmtBulan(ym)+'*:\n\n'
+  let grand=0
+  anak.forEach(p=>{
+    const pr=rekods.filter(r=>r.pelajarUid===p.uid).sort((a,b)=>a.tarikh.localeCompare(b.tarikh))
+    const jSesi=pr.reduce((a,r)=>a+(+r.sesi||0),0)
+    const jYuran=pr.reduce((a,r)=>a+(+r.yuran||0),0)
+    grand+=jYuran
+    if(mode==='semua'){ msg+='👦 *'+p.nama.toUpperCase()+'*\n'+'─'.repeat(26)+'\n' }
+    if(pr.length){
+      pr.forEach(r=>{
+        msg+='📅 '+fmtTarikh(r.tarikh)+' — '+r.sesi+' sesi\n'
+        if(r.muka){ msg+='   📖 m/s '+r.muka+(r.ayat?' | '+r.ayat:'')+(r.surah?' | '+r.surah:'')+'\n' }
+        if(r.catatan) msg+='   📝 '+r.catatan+'\n'
+      })
+    } else { msg+='   (Tiada rekod sesi bulan ini)\n' }
+    msg+='Jumlah: '+jSesi+' sesi | *'+fmtRM(jYuran)+'*\n'
+    if(mode==='semua') msg+='\n'
+  })
+  msg+='═'.repeat(26)+'\n'
+  msg+=(mode==='semua'&&anak.length>1?'💰 Jumlah Keseluruhan: *'+fmtRM(grand)+'*\n':'💰 Jumlah Yuran: *'+fmtRM(grand)+'*\n')
+  msg+='\nSekian, terima kasih. 🙏'
+  const tel=k.tel.replace(/\D/g,'')
+  window.open('https://wa.me/'+(tel.startsWith('0')?'6'+tel:tel)+'?text='+encodeURIComponent(msg),'_blank')
+}
+
+/* ════════════════════════════════
+   PAPAN
+════════════════════════════════ */
+function renderPapan(){
+  const rekodsBulan=getAllRekodCache().filter(r=>r.tarikh&&r.tarikh.slice(0,7)===curYM())
+  document.getElementById('st-k').textContent=CACHE.keluarga.length
+  document.getElementById('st-p').textContent=CACHE.pelajar.length
+  document.getElementById('st-s').textContent=rekodsBulan.reduce((a,r)=>a+(+r.sesi||0),0)
+  document.getElementById('st-y').textContent=fmtRM(rekodsBulan.reduce((a,r)=>a+(+r.yuran||0),0))
+  const terkini=[...getAllRekodCache()].sort((a,b)=>b.simpanPada.localeCompare(a.simpanPada)).slice(0,5)
+  const tEl=document.getElementById('papan-terkini')
+  tEl.innerHTML=terkini.length?terkini.map(r=>{
+    const k=CACHE.keluarga.find(x=>x.uid===r.keluargaUid)
+    return '<div class="rekod-item" style="margin-bottom:6px">'+
+      '<div class="rekod-top">'+
+        '<div><div class="rekod-nama">'+r.pelajarNama+'</div>'+
+        (k?'<div class="rekod-fam">👨‍👩‍👧‍👦 '+k.nama+'</div>':'')+
+        '<div class="rekod-meta">'+fmtTarikh(r.tarikh)+'</div></div>'+
+        '<div><span class="badge badge-sesi">'+r.sesi+' Sesi</span><div class="rekod-yuran">'+fmtRM(r.yuran)+'</div></div>'+
+      '</div>'+
+      (r.muka?'<div class="rekod-bkmk">🔖 m/s '+r.muka+(r.ayat?' · '+r.ayat:'')+(r.surah?' · '+r.surah:'')+'</div>':'')+
+    '</div>'
+  }).join(''):'<div class="empty"><div class="empty-ico">📋</div><p>Tiada rekod lagi</p></div>'
+}
+
+/* ════════════════════════════════
+   LAPORAN
+════════════════════════════════ */
+let laporanData=[]
+async function janaLaporan(){
+  const dari=document.getElementById('l-dari').value
+  const hingga=document.getElementById('l-hingga').value
+  if(!dari||!hingga){ toast('Sila pilih tarikh!','err'); return }
+  if(dari>hingga){ toast('Tarikh tidak sah!','err'); return }
+  // Load semua bulan dalam range on-demand
+  const ymDari=dari.slice(0,7), ymHingga=hingga.slice(0,7)
+  let ym=ymDari
+  while(ym<=ymHingga){
+    await loadRekodBulan(ym)
+    const [y,m]=ym.split('-')
+    const next=new Date(+y, +m, 1)
+    ym=next.getFullYear()+'-'+String(next.getMonth()+1).padStart(2,'0')
+  }
+  const rekods=getAllRekodCache().filter(r=>r.tarikh>=dari&&r.tarikh<=hingga)
+  laporanData=CACHE.keluarga.map(k=>{
+    const anak=CACHE.pelajar.filter(p=>p.keluargaUid===k.uid)
+    const childData=anak.map(p=>{
+      const pr=rekods.filter(r=>r.pelajarUid===p.uid)
+      const jSesi=pr.reduce((a,r)=>a+(+r.sesi||0),0)
+      const jYuran=pr.reduce((a,r)=>a+(+r.yuran||0),0)
+      const bkmk=pr.filter(r=>r.muka).sort((a,b)=>b.tarikh.localeCompare(a.tarikh))[0]
+      return{nama:p.nama,kadar:p.kadar,jSesi,jYuran,bkmk}
+    })
+    return{k,childData,totalFam:childData.reduce((a,c)=>a+c.jYuran,0)}
+  })
+  const grand=laporanData.reduce((a,r)=>a+r.totalFam,0)
+  document.getElementById('laporan-result').innerHTML=
+    '<div class="hero"><div class="hero-lbl">Jumlah Yuran Tempoh Ini</div><div class="hero-amt">'+fmtRM(grand)+'</div><div class="hero-sub">'+fmtTarikh(dari)+' — '+fmtTarikh(hingga)+'</div></div>'+
+    laporanData.map(row=>
+      '<div class="lap-fam">'+
+        '<div class="lap-fam-top">'+
+          '<div><div class="lap-fam-nama">'+row.k.nama+'</div><div class="lap-fam-tel">📱 '+row.k.tel+'</div></div>'+
+          '<div><div class="lap-fam-total">'+fmtRM(row.totalFam)+'</div><div style="font-size:10px;color:var(--muted);text-align:right">Jumlah</div></div>'+
+        '</div>'+
+        row.childData.map(c=>
+          '<div class="lap-child">'+
+            '<div class="lap-child-nama">'+c.nama+'</div>'+
+            '<div class="lap-child-info">'+c.jSesi+' sesi · '+fmtRM(c.kadar)+'/sesi</div>'+
+            '<div class="lap-child-amt">'+fmtRM(c.jYuran)+'</div>'+
+            (c.bkmk?'<div class="lap-child-bkmk">🔖 m/s '+c.bkmk.muka+(c.bkmk.ayat?' · '+c.bkmk.ayat:'')+(c.bkmk.surah?' · '+c.bkmk.surah:'')+'</div>':'')+
+          '</div>'
+        ).join('')+
+      '</div>'
+    ).join('')
+  document.getElementById('btn-csv').style.display='flex'
+  toast('✅ Laporan dijana!')
+}
+
+function exportCSV(){
+  const dari=document.getElementById('l-dari').value
+  const hingga=document.getElementById('l-hingga').value
+  let csv='Keluarga,Telefon,Nama Anak,Kadar/Sesi,Jumlah Sesi,Jumlah Yuran,Bookmark Terakhir\n'
+  laporanData.forEach(row=>row.childData.forEach(c=>{
+    const bkmk=c.bkmk?'m/s '+c.bkmk.muka+(c.bkmk.ayat?' ayat '+c.bkmk.ayat:''):''
+    csv+='"'+row.k.nama+'","'+row.k.tel+'","'+c.nama+'","'+c.kadar+'","'+c.jSesi+'","'+c.jYuran.toFixed(2)+'","'+bkmk+'"\n'
+  }))
+  const a=document.createElement('a')
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}))
+  a.download='Laporan_Mengaji_'+dari+'_'+hingga+'.csv'
+  a.click()
+  toast('📤 CSV dimuat turun!')
+}
+
+init()
+</script>
+</body>
+</html>
