@@ -372,7 +372,16 @@ function confirmResolve(val){
 /* ════════════════════════════════
    CONFIG
 ════════════════════════════════ */
-let SCRIPT_URL = localStorage.getItem('mgj_url') || ''
+// Baca URL dari parameter ?url= dulu, kalau takda guna localStorage
+function getScriptURL(){
+  const param = new URLSearchParams(window.location.search).get('url')
+  if(param){
+    localStorage.setItem('mgj_url', param)  // auto-simpan untuk kegunaan offline
+    return param
+  }
+  return localStorage.getItem('mgj_url') || ''
+}
+let SCRIPT_URL = getScriptURL()
 
 /* ════════════════════════════════
    IN-MEMORY CACHE (Smart — by bulan)
@@ -484,36 +493,53 @@ async function init(){
   await loadAllData()
 }
 
+// Dapatkan array 3 bulan terkini: ['2026-04','2026-03','2026-02']
+function tiga_bulan_terkini(){
+  const result=[]
+  const now=new Date()
+  for(let i=0;i<3;i++){
+    const d=new Date(now.getFullYear(), now.getMonth()-i, 1)
+    result.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))
+  }
+  return result
+}
+
 async function loadAllData(force=false){
-  // Skip reload kalau data masih segar (dalam TTL) dan bukan force refresh
   if(!force && CACHE_TS && (Date.now()-CACHE_TS)<CACHE_TTL && CACHE.keluarga.length){
     renderPapan(); return
   }
   setSyncStatus('load')
   try{
     showOverlay('Memuatkan data...')
-    let keluarga=[], pelajar=[], rekodBulan=[]
+    const bulan3=tiga_bulan_terkini()
+    let keluarga=[], pelajar=[], rekods3={}
     try{
-      // Cuba getInit dulu (Apps Script baru)
-      const r = await api({action:'getInit', ym:curYM()})
+      // Cuba getInit untuk 3 bulan sekaligus (Apps Script baru)
+      const [r, ...rBulans] = await Promise.all([
+        api({action:'getInit', ym:bulan3[0]}),
+        ...bulan3.slice(1).map(ym=>api({action:'getRekodBulan', ym}))
+      ])
       keluarga = r.keluarga||[]
       pelajar  = r.pelajar||[]
-      rekodBulan = (r.rekod||[]).map(normTarikh)
+      rekods3[bulan3[0]] = (r.rekod||[]).map(normTarikh)
+      bulan3.slice(1).forEach((ym,i)=>{
+        rekods3[ym] = (rBulans[i].data||[]).map(normTarikh)
+      })
     }catch(e1){
-      // Fallback ke 3 call berasingan (Apps Script lama)
+      // Fallback — 3 call berasingan
       toast('⚠️ Guna mod lama...','warn')
-      const [rK,rP,rR] = await Promise.all([
+      const [rK,rP,...rRs] = await Promise.all([
         api({action:'getKeluarga'}),
         api({action:'getPelajar'}),
-        api({action:'getRekodBulan', ym:curYM()})
+        ...bulan3.map(ym=>api({action:'getRekodBulan', ym}))
       ])
       keluarga = rK.data||[]
       pelajar  = rP.data||[]
-      rekodBulan = (rR.data||[]).map(normTarikh)
+      bulan3.forEach((ym,i)=>{ rekods3[ym]=(rRs[i].data||[]).map(normTarikh) })
     }
     CACHE.keluarga = keluarga
     CACHE.pelajar  = pelajar
-    REKOD_CACHE[curYM()] = rekodBulan
+    bulan3.forEach(ym=>{ REKOD_CACHE[ym]=rekods3[ym] })
     CACHE.rekod = getAllRekodCache()
     CACHE_TS = Date.now()
     setSyncStatus('ok')
