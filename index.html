@@ -976,6 +976,7 @@ async function simpanRekod(){
     REKOD_CACHE[ymObj]=REKOD_CACHE[ymObj].filter(r=>r.uid!==obj.uid&&!(r.pelajarUid===obj.pelajarUid&&r.tarikh===obj.tarikh))
     REKOD_CACHE[ymObj].push(obj)
     CACHE.rekod=getAllRekodCache()
+    saveLocalCache()
     // Reset form
     document.getElementById('r-sesi').value='1'
     document.getElementById('r-catatan').value=''
@@ -1043,6 +1044,7 @@ async function hapusRekod(rUid){
       REKOD_CACHE[ym]=REKOD_CACHE[ym].filter(r=>r.uid!==rUid)
     })
     CACHE.rekod=getAllRekodCache()
+    saveLocalCache()
     renderSejarah()
     setSyncStatus('ok')
     toast('🗑️ Rekod dipadam','err')
