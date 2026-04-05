@@ -200,7 +200,7 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
 <div class="header">
   <div class="hdr">
     <div class="hdr-logo">🕌</div>
-    <div class="hdr-text"><h1>Kelas Mengaji</h1><p>Sistem Kehadiran & Yuran</p></div>
+    <div class="hdr-text"><h1>Kelas Mengaji</h1><p>Sistem Kehadiran & Yuran · <span style="color:rgba(255,255,255,0.4)">v2.5</span></p></div>
     <div class="hdr-right">
       <div class="sync-badge"><div class="sync-dot" id="syncDot"></div><span id="syncLbl">—</span></div>
       <button onclick="forceRefresh()" style="background:rgba(255,255,255,0.13);border:1.5px solid rgba(255,255,255,0.2);border-radius:10px;padding:5px 9px;color:#fff;font-size:14px;cursor:pointer" title="Refresh Data">🔄</button>
@@ -658,6 +658,8 @@ async function syncFromSheets(force=false){
     await Promise.all(pelajar.map(x=>dbPut('pelajar',x)))
     await Promise.all(rekodList.map(x=>dbUpsertRekod(x)))
     await setMeta('lastSync',Date.now())
+    // Tandakan 3 bulan sebagai synced
+    await Promise.all(bulan3.map(ym=>setMeta('synced_'+ym, Date.now())))
     // Reload ke CACHE
     CACHE.keluarga=keluarga; CACHE.pelajar=pelajar
     await loadRekodFromDB()
@@ -669,25 +671,16 @@ async function syncFromSheets(force=false){
   }
 }
 
-// Load bulan on-demand dari Sheets kalau belum ada dalam IDB
+// Load bulan on-demand — check meta dulu, kalau dah sync skip Sheets
 async function loadRekodBulan(ym){
-  // Check IDB ada data untuk bulan ini
-  const db=await openDB()
-  const existing=await new Promise(res=>{
-    const tx=db.transaction('rekod','readonly')
-    const idx=tx.objectStore('rekod').index('tarikh')
-    const range=IDBKeyRange.bound(ym+'-01',ym+'-31')
-    const req=idx.getAll(range)
-    req.onsuccess=e=>res(e.target.result||[])
-    req.onerror=()=>res([])
-  })
-  if(existing.length>0) return  // Dah ada, skip
-  // Belum ada — load dari Sheets
+  const synced=await getMeta('synced_'+ym)
+  if(synced) return  // Bulan ni dah pernah sync, guna IDB terus
   if(!SCRIPT_URL) return
   try{
     const r=await api({action:'getRekodBulan',ym})
     const list=(r.data||[]).map(normTarikh)
     await Promise.all(list.map(x=>dbUpsertRekod(x)))
+    await setMeta('synced_'+ym, Date.now())  // Tanda bulan dah sync
     await loadRekodFromDB()
   }catch(e){
     console.warn('loadRekodBulan gagal:',e)
@@ -695,9 +688,14 @@ async function loadRekodBulan(ym){
 }
 
 async function forceRefresh(){
-  // Padam semua rekod dalam IDB dan reload
+  // Padam semua rekod dalam IDB dan clear semua meta synced_*
   const db=await openDB()
   await new Promise(res=>{ const req=db.transaction('rekod','readwrite').objectStore('rekod').clear(); req.onsuccess=res })
+  // Clear semua meta synced_bulan
+  const allMeta=await dbGetAll('meta')
+  await Promise.all(
+    allMeta.filter(m=>m.k.startsWith('synced_')).map(m=>dbDelete('meta',m.k))
+  )
   await setMeta('lastSync',0)
   await loadAllData(true)
   toast('🔄 Data direfresh!')
