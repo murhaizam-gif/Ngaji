@@ -1039,9 +1039,15 @@ async function hapusRekod(rUid){
   setSyncStatus('load')
   try{
     await api({action:'deleteRekod',uid:rUid})
-    // Buang dari REKOD_CACHE juga
+    // Cari rekod yang dipadam untuk dapat pelajarUid + tarikh
+    const rHapus=getAllRekodCache().find(r=>r.uid===rUid)
+    // Buang dari REKOD_CACHE by uid DAN by pelajar+tarikh (cover kes duplicate entry)
     Object.keys(REKOD_CACHE).forEach(ym=>{
-      REKOD_CACHE[ym]=REKOD_CACHE[ym].filter(r=>r.uid!==rUid)
+      REKOD_CACHE[ym]=REKOD_CACHE[ym].filter(r=>{
+        if(r.uid===rUid) return false
+        if(rHapus&&r.pelajarUid===rHapus.pelajarUid&&r.tarikh===rHapus.tarikh) return false
+        return true
+      })
     })
     CACHE.rekod=getAllRekodCache()
     saveLocalCache()
