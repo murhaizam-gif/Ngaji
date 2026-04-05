@@ -372,24 +372,17 @@ function confirmResolve(val){
 /* ════════════════════════════════
    CONFIG
 ════════════════════════════════ */
-// Baca URL dari parameter ?url= dulu, kalau takda guna localStorage
 function getScriptURL(){
   const param = new URLSearchParams(window.location.search).get('url')
-  if(param){
-    localStorage.setItem('mgj_url', param)  // auto-simpan untuk kegunaan offline
-    return param
-  }
+  if(param){ localStorage.setItem('mgj_url', param); return param }
   return localStorage.getItem('mgj_url') || ''
 }
 let SCRIPT_URL = getScriptURL()
 
 /* ════════════════════════════════
-   IN-MEMORY CACHE (Smart — by bulan)
+   IN-MEMORY (untuk render UI sahaja)
 ════════════════════════════════ */
 let CACHE = { keluarga:[], pelajar:[], rekod:[] }
-let REKOD_CACHE = {}      // { 'YYYY-MM': [...rekod] }
-let CACHE_TS = 0          // timestamp last full refresh
-const CACHE_TTL = 5*60*1000  // 5 minit
 
 function normTarikh(r){
   if(r.tarikh&&!/^\d{4}-\d{2}-\d{2}$/.test(r.tarikh)){
@@ -401,15 +394,104 @@ function normTarikh(r){
   return r
 }
 
-function getRekodBulanCache(ym){
-  // Gabung semua rekod yang ada dalam REKOD_CACHE untuk bulan ini
-  return REKOD_CACHE[ym]||[]
+/* ════════════════════════════════
+   INDEXEDDB — Primary storage
+════════════════════════════════ */
+const DB_NAME='mgj_db', DB_VER=1
+let _db=null
+
+function openDB(){
+  if(_db) return Promise.resolve(_db)
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(DB_NAME,DB_VER)
+    req.onupgradeneeded=e=>{
+      const db=e.target.result
+      if(!db.objectStoreNames.contains('keluarga')) db.createObjectStore('keluarga',{keyPath:'uid'})
+      if(!db.objectStoreNames.contains('pelajar'))  db.createObjectStore('pelajar', {keyPath:'uid'})
+      if(!db.objectStoreNames.contains('rekod')){
+        const s=db.createObjectStore('rekod',{keyPath:'uid'})
+        s.createIndex('pelajarTarikh','_pt',{unique:true})
+        s.createIndex('tarikh','tarikh')
+      }
+      if(!db.objectStoreNames.contains('meta'))     db.createObjectStore('meta',{keyPath:'k'})
+    }
+    req.onsuccess=e=>{ _db=e.target.result; res(_db) }
+    req.onerror=e=>rej(e.target.error)
+  })
 }
 
-// Rekod aktif = bulan semasa dari cache
-function getAllRekodCache(){
-  return Object.values(REKOD_CACHE).flat()
+function dbTx(stores,mode='readonly'){
+  return openDB().then(db=>{
+    const tx=db.transaction(stores,mode)
+    return tx
+  })
 }
+
+function dbGet(store,key){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const req=db.transaction(store,'readonly').objectStore(store).get(key)
+    req.onsuccess=e=>res(e.target.result)
+    req.onerror=e=>rej(e.target.error)
+  }))
+}
+
+function dbGetAll(store){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const req=db.transaction(store,'readonly').objectStore(store).getAll()
+    req.onsuccess=e=>res(e.target.result||[])
+    req.onerror=e=>rej(e.target.error)
+  }))
+}
+
+function dbPut(store,obj){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const req=db.transaction(store,'readwrite').objectStore(store).put(obj)
+    req.onsuccess=e=>res(e.target.result)
+    req.onerror=e=>rej(e.target.error)
+  }))
+}
+
+function dbDelete(store,key){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const req=db.transaction(store,'readwrite').objectStore(store).delete(key)
+    req.onsuccess=()=>res()
+    req.onerror=e=>rej(e.target.error)
+  }))
+}
+
+// Upsert rekod — padam SEMUA entry dengan pelajarTarikh sama dulu, baru insert
+async function dbUpsertRekod(obj){
+  const db=await openDB()
+  const pt=obj.pelajarUid+'|'+obj.tarikh
+  const obj2={...obj,_pt:pt}
+  return new Promise((res,rej)=>{
+    const tx=db.transaction('rekod','readwrite')
+    const store=tx.objectStore('rekod')
+    const idx=store.index('pelajarTarikh')
+    // Ambil SEMUA entry dengan pt yang sama (getAll bukan get)
+    const req=idx.getAll(pt)
+    req.onsuccess=e=>{
+      const existing=e.target.result||[]
+      // Padam semua entry lama kecuali yang sama uid
+      existing.forEach(r=>{ if(r.uid!==obj2.uid) store.delete(r.uid) })
+      // Put entry baru
+      const putReq=store.put(obj2)
+      putReq.onsuccess=()=>res()
+      putReq.onerror=e=>rej(e.target.error)
+    }
+    req.onerror=e=>rej(e.target.error)
+    tx.onerror=e=>rej(e.target.error)
+  })
+}
+
+// Load semua rekod dari IDB ke CACHE.rekod
+async function loadRekodFromDB(){
+  const rekods=await dbGetAll('rekod')
+  CACHE.rekod=rekods.map(r=>{ const {_pt,...rest}=r; return rest })
+}
+
+async function getMeta(k){ const r=await dbGet('meta',k); return r?r.v:null }
+async function setMeta(k,v){ return dbPut('meta',{k,v}) }
 
 /* ════════════════════════════════
    HELPERS
@@ -523,147 +605,100 @@ function tiga_bulan_terkini(){
   return result
 }
 
-async function loadAllData(force=false){
-  if(!force && CACHE_TS && (Date.now()-CACHE_TS)<CACHE_TTL && CACHE.keluarga.length){
-    renderPapan(); return
-  }
-  // Kalau ada data dalam cache IDB, tunjuk dulu sebelum fetch
-  const savedCache = loadLocalCache()
-  if(savedCache && !force){
-    CACHE.keluarga = savedCache.keluarga||[]
-    CACHE.pelajar  = savedCache.pelajar||[]
-    REKOD_CACHE    = savedCache.rekodCache||{}
-    CACHE.rekod    = getAllRekodCache()
-    CACHE_TS       = savedCache.ts||0
-    renderPapan()
-    setSyncStatus('load')
-    // Update di background
-    fetchAndUpdate()
-    return
-  }
-  setSyncStatus('load')
-  try{
-    showOverlay('Memuatkan data...')
-    const bulan3=tiga_bulan_terkini()
-    let keluarga=[], pelajar=[], rekods3={}
-    try{
-      // Cuba getInit untuk 3 bulan sekaligus (Apps Script baru)
-      const [r, ...rBulans] = await Promise.all([
-        api({action:'getInit', ym:bulan3[0]}),
-        ...bulan3.slice(1).map(ym=>api({action:'getRekodBulan', ym}))
-      ])
-      keluarga = r.keluarga||[]
-      pelajar  = r.pelajar||[]
-      rekods3[bulan3[0]] = (r.rekod||[]).map(normTarikh)
-      bulan3.slice(1).forEach((ym,i)=>{
-        rekods3[ym] = (rBulans[i].data||[]).map(normTarikh)
-      })
-    }catch(e1){
-      // Fallback — 3 call berasingan
-      toast('⚠️ Guna mod lama...','warn')
-      const [rK,rP,...rRs] = await Promise.all([
-        api({action:'getKeluarga'}),
-        api({action:'getPelajar'}),
-        ...bulan3.map(ym=>api({action:'getRekodBulan', ym}))
-      ])
-      keluarga = rK.data||[]
-      pelajar  = rP.data||[]
-      bulan3.forEach((ym,i)=>{ rekods3[ym]=(rRs[i].data||[]).map(normTarikh) })
-    }
-    CACHE.keluarga = keluarga
-    CACHE.pelajar  = pelajar
-    bulan3.forEach(ym=>{ REKOD_CACHE[ym]=rekods3[ym] })
-    CACHE.rekod = getAllRekodCache()
-    CACHE_TS = Date.now()
-    saveLocalCache()
-    setSyncStatus('ok')
-    renderPapan()
-  }catch(e){
-    setSyncStatus('err')
-    toast('Gagal memuatkan data: '+e.message,'err')
-  }finally{ hideOverlay() }
-}
-
 /* ════════════════════════════════
-   LOCAL CACHE — localStorage untuk data persist
+   LOAD DATA — IndexedDB first, Sheets background
 ════════════════════════════════ */
-function saveLocalCache(){
-  try{
-    const payload={ keluarga:CACHE.keluarga, pelajar:CACHE.pelajar, rekodCache:REKOD_CACHE, ts:CACHE_TS }
-    localStorage.setItem('mgj_cache', JSON.stringify(payload))
-  }catch(e){ console.warn('saveLocalCache gagal:',e) }
+function tiga_bulan_terkini(){
+  const result=[], now=new Date()
+  for(let i=0;i<3;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1)
+    result.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))
+  }
+  return result
 }
 
-function loadLocalCache(){
-  try{
-    const raw=localStorage.getItem('mgj_cache')
-    if(!raw) return null
-    const d=JSON.parse(raw)
-    // Cache expired selepas 30 minit — paksa refresh
-    if(!d.ts||(Date.now()-d.ts)>30*60*1000) return null
-    return d
-  }catch(e){ return null }
+async function loadAllData(force=false){
+  // 1. Load dari IDB dulu — serta-merta
+  const [k,p]=await Promise.all([dbGetAll('keluarga'),dbGetAll('pelajar')])
+  CACHE.keluarga=k; CACHE.pelajar=p
+  await loadRekodFromDB()
+  renderPapan()
+  // 2. Sync dari Sheets di background
+  if(SCRIPT_URL) syncFromSheets(force)
 }
 
-// Fetch data baru di background, update UI bila siap
-async function fetchAndUpdate(){
+async function syncFromSheets(force=false){
+  const lastSync=await getMeta('lastSync')||0
+  // Skip kalau sync dalam 5 minit dan bukan force
+  if(!force && (Date.now()-lastSync)<5*60*1000) return
+  setSyncStatus('load')
   try{
     const bulan3=tiga_bulan_terkini()
-    let keluarga=[], pelajar=[], rekods3={}
+    let keluarga=[], pelajar=[], rekodList=[]
     try{
-      const [r, ...rBulans] = await Promise.all([
-        api({action:'getInit', ym:bulan3[0]}),
-        ...bulan3.slice(1).map(ym=>api({action:'getRekodBulan', ym}))
+      const [r,...rBulans]=await Promise.all([
+        api({action:'getInit',ym:bulan3[0]}),
+        ...bulan3.slice(1).map(ym=>api({action:'getRekodBulan',ym}))
       ])
-      keluarga = r.keluarga||[]
-      pelajar  = r.pelajar||[]
-      rekods3[bulan3[0]] = (r.rekod||[]).map(normTarikh)
-      bulan3.slice(1).forEach((ym,i)=>{ rekods3[ym]=(rBulans[i].data||[]).map(normTarikh) })
+      keluarga=r.keluarga||[]; pelajar=r.pelajar||[]
+      rekodList=[...(r.rekod||[]).map(normTarikh)]
+      rBulans.forEach(rb=>{ rekodList.push(...(rb.data||[]).map(normTarikh)) })
     }catch(e1){
-      const [rK,rP,...rRs] = await Promise.all([
+      toast('⚠️ Guna mod lama...','warn')
+      const [rK,rP,...rRs]=await Promise.all([
         api({action:'getKeluarga'}),
         api({action:'getPelajar'}),
-        ...bulan3.map(ym=>api({action:'getRekodBulan', ym}))
+        ...bulan3.map(ym=>api({action:'getRekodBulan',ym}))
       ])
-      keluarga = rK.data||[]
-      pelajar  = rP.data||[]
-      bulan3.forEach((ym,i)=>{ rekods3[ym]=(rRs[i].data||[]).map(normTarikh) })
+      keluarga=rK.data||[]; pelajar=rP.data||[]
+      rRs.forEach(rb=>{ rekodList.push(...(rb.data||[]).map(normTarikh)) })
     }
-    CACHE.keluarga = keluarga
-    CACHE.pelajar  = pelajar
-    bulan3.forEach(ym=>{ REKOD_CACHE[ym]=rekods3[ym] })
-    CACHE.rekod = getAllRekodCache()
-    CACHE_TS = Date.now()
-    saveLocalCache()
+    // Simpan ke IDB
+    await Promise.all(keluarga.map(x=>dbPut('keluarga',x)))
+    await Promise.all(pelajar.map(x=>dbPut('pelajar',x)))
+    await Promise.all(rekodList.map(x=>dbUpsertRekod(x)))
+    await setMeta('lastSync',Date.now())
+    // Reload ke CACHE
+    CACHE.keluarga=keluarga; CACHE.pelajar=pelajar
+    await loadRekodFromDB()
     setSyncStatus('ok')
     renderPapan()
   }catch(e){
     setSyncStatus('err')
-    console.warn('fetchAndUpdate gagal:',e)
+    console.warn('syncFromSheets gagal:',e)
   }
 }
 
-// Load rekod bulan tertentu on-demand
+// Load bulan on-demand dari Sheets kalau belum ada dalam IDB
 async function loadRekodBulan(ym){
-  if(REKOD_CACHE[ym]) return  // Dah ada dalam cache, skip
-  setSyncStatus('load')
+  // Check IDB ada data untuk bulan ini
+  const db=await openDB()
+  const existing=await new Promise(res=>{
+    const tx=db.transaction('rekod','readonly')
+    const idx=tx.objectStore('rekod').index('tarikh')
+    const range=IDBKeyRange.bound(ym+'-01',ym+'-31')
+    const req=idx.getAll(range)
+    req.onsuccess=e=>res(e.target.result||[])
+    req.onerror=()=>res([])
+  })
+  if(existing.length>0) return  // Dah ada, skip
+  // Belum ada — load dari Sheets
+  if(!SCRIPT_URL) return
   try{
-    const r = await api({action:'getRekodBulan', ym})
-    REKOD_CACHE[ym] = (r.data||[]).map(normTarikh)
-    CACHE.rekod = getAllRekodCache()
-    setSyncStatus('ok')
+    const r=await api({action:'getRekodBulan',ym})
+    const list=(r.data||[]).map(normTarikh)
+    await Promise.all(list.map(x=>dbUpsertRekod(x)))
+    await loadRekodFromDB()
   }catch(e){
-    setSyncStatus('err')
-    toast('Gagal memuatkan rekod: '+e.message,'err')
+    console.warn('loadRekodBulan gagal:',e)
   }
 }
 
-// Force refresh — padam semua cache dulu
 async function forceRefresh(){
-  REKOD_CACHE = {}
-  CACHE_TS = 0
-  CACHE.rekod = []
-  localStorage.removeItem('mgj_cache')
+  // Padam semua rekod dalam IDB dan reload
+  const db=await openDB()
+  await new Promise(res=>{ const req=db.transaction('rekod','readwrite').objectStore('rekod').clear(); req.onsuccess=res })
+  await setMeta('lastSync',0)
   await loadAllData(true)
   toast('🔄 Data direfresh!')
 }
@@ -717,13 +752,14 @@ async function tambahKeluarga(){
   showOverlay('Mendaftar keluarga...')
   setSyncStatus('load')
   try{
-    await api({action:'saveKeluarga',data:obj})
+    await dbPut('keluarga',obj)
     CACHE.keluarga.push(obj)
     document.getElementById('k-nama').value=''
     document.getElementById('k-tel').value=''
     renderKeluarga()
     setSyncStatus('ok')
     toast('✅ Keluarga didaftarkan!')
+    api({action:'saveKeluarga',data:obj}).catch(e=>console.warn('Push keluarga gagal:',e))
   }catch(e){ setSyncStatus('err'); toast('❌ '+e.message,'err') }
   finally{ hideOverlay() }
 }
@@ -735,11 +771,12 @@ async function hapusKeluarga(kUid){
   showOverlay('Memadam keluarga...')
   setSyncStatus('load')
   try{
-    await api({action:'deleteKeluarga',uid:kUid})
+    await dbDelete('keluarga',kUid)
     CACHE.keluarga=CACHE.keluarga.filter(k=>k.uid!==kUid)
     renderKeluarga()
     setSyncStatus('ok')
     toast('🗑️ Keluarga dipadam','err')
+    api({action:'deleteKeluarga',uid:kUid}).catch(e=>console.warn('Push delete keluarga gagal:',e))
   }catch(e){ setSyncStatus('err'); toast('❌ '+e.message,'err') }
   finally{ hideOverlay() }
 }
@@ -753,13 +790,14 @@ async function tambahAnak(kUid){
   showOverlay('Mendaftar pelajar...')
   setSyncStatus('load')
   try{
-    await api({action:'savePelajar',data:obj})
+    await dbPut('pelajar',obj)
     CACHE.pelajar.push(obj)
     document.getElementById('an-n-'+kUid).value=''
     document.getElementById('an-k-'+kUid).value=''
     renderKeluarga()
     setSyncStatus('ok')
     toast('✅ Pelajar ditambah!')
+    api({action:'savePelajar',data:obj}).catch(e=>console.warn('Push pelajar gagal:',e))
   }catch(e){ setSyncStatus('err'); toast('❌ '+e.message,'err') }
   finally{ hideOverlay() }
 }
@@ -769,11 +807,12 @@ async function hapusAnak(pUid){
   showOverlay('Memadam pelajar...')
   setSyncStatus('load')
   try{
-    await api({action:'deletePelajar',uid:pUid})
+    await dbDelete('pelajar',pUid)
     CACHE.pelajar=CACHE.pelajar.filter(p=>p.uid!==pUid)
     renderKeluarga()
     setSyncStatus('ok')
     toast('🗑️ Pelajar dipadam','err')
+    api({action:'deletePelajar',uid:pUid}).catch(e=>console.warn('Push delete pelajar gagal:',e))
   }catch(e){ setSyncStatus('err'); toast('❌ '+e.message,'err') }
   finally{ hideOverlay() }
 }
@@ -884,7 +923,16 @@ function checkExisting(){
   const latestInfo=document.getElementById('latest-rekod-info')
   const btnSimpan=document.getElementById('btn-simpan')
   if(!pUid||!tarikh){ isEdit=false; editUid=''; panel.style.display='none'; latestPanel.style.display='none'; btnSimpan.textContent='💾 Simpan Rekod'; return }
-  const existing=getAllRekodCache().find(r=>r.pelajarUid===pUid&&r.tarikh===tarikh)
+  // Ambil semua entry untuk pelajar+tarikh (sepatutnya 1 sahaja)
+  const allExisting=CACHE.rekod.filter(r=>r.pelajarUid===pUid&&r.tarikh===tarikh)
+  // Auto-clean duplicate — kekal yang paling terkini
+  if(allExisting.length>1){
+    const toKeep=allExisting.sort((a,b)=>b.simpanPada.localeCompare(a.simpanPada))[0]
+    const toRemove=allExisting.filter(r=>r.uid!==toKeep.uid)
+    toRemove.forEach(r=>dbDelete('rekod',r.uid))
+    CACHE.rekod=CACHE.rekod.filter(r=>!toRemove.find(x=>x.uid===r.uid))
+  }
+  const existing=allExisting.sort((a,b)=>b.simpanPada.localeCompare(a.simpanPada))[0]||null
   if(existing){
     // Ada rekod pada tarikh ini — papar dalam panel kuning
     isEdit=true; editUid=existing.uid
@@ -901,7 +949,7 @@ function checkExisting(){
     isEdit=false; editUid=''
     panel.style.display='none'
     btnSimpan.textContent='💾 Simpan Rekod'
-    const latest=getAllRekodCache().filter(r=>r.pelajarUid===pUid).sort((a,b)=>b.tarikh.localeCompare(a.tarikh))[0]
+    const latest=CACHE.rekod.filter(r=>r.pelajarUid===pUid).sort((a,b)=>b.tarikh.localeCompare(a.tarikh))[0]
     if(latest){
       let html='📅 Tarikh: <strong>'+fmtTarikh(latest.tarikh)+'</strong><br>'
       html+='🕌 Sesi: <strong>'+latest.sesi+' sesi</strong> | 💰 Yuran: <strong>'+fmtRM(latest.yuran)+'</strong><br>'
@@ -969,14 +1017,13 @@ async function simpanRekod(){
   showOverlay(wasEdit?'Mengemaskini rekod...':'Menyimpan rekod...')
   setSyncStatus('load')
   try{
-    await api({action:'saveRekod', data:obj})
-    // Update REKOD_CACHE — buang entry lama, push baru ke bulan betul
-    const ymObj=obj.tarikh.slice(0,7)
-    if(!REKOD_CACHE[ymObj]) REKOD_CACHE[ymObj]=[]
-    REKOD_CACHE[ymObj]=REKOD_CACHE[ymObj].filter(r=>r.uid!==obj.uid&&!(r.pelajarUid===obj.pelajarUid&&r.tarikh===obj.tarikh))
-    REKOD_CACHE[ymObj].push(obj)
-    CACHE.rekod=getAllRekodCache()
-    saveLocalCache()
+    // Simpan ke IDB dulu (local-first)
+    await dbUpsertRekod(obj)
+    await loadRekodFromDB()
+    // Push ke Sheets di background
+    api({action:'saveRekod',data:obj}).then(()=>setSyncStatus('ok')).catch(e=>{
+      setSyncStatus('err'); console.warn('Background push gagal:',e)
+    })
     // Reset form
     document.getElementById('r-sesi').value='1'
     document.getElementById('r-catatan').value=''
@@ -998,12 +1045,13 @@ async function renderSejarah(){
   const tDate=document.getElementById('f-tarikh').value
   const tBulan=document.getElementById('f-bulan').value
   const tPelajar=document.getElementById('f-pelajar').value
-  const ymTarget = tBulan || (tDate?tDate.slice(0,7):curYM())
-  // Tunjuk loading dulu
   const el=document.getElementById('senarai-s')
-  if(!REKOD_CACHE[ymTarget]) el.innerHTML='<div class="empty"><div class="empty-ico">⏳</div><p>Memuatkan rekod...</p></div>'
+  const ymTarget = tBulan || (tDate?tDate.slice(0,7):curYM())
+  // Load dari Sheets kalau bulan ini belum ada dalam IDB
+  el.innerHTML='<div class="empty"><div class="empty-ico">⏳</div><p>Memuatkan rekod...</p></div>'
   await loadRekodBulan(ymTarget)
-  let rekods=[...getAllRekodCache()]
+  await loadRekodFromDB()
+  let rekods=[...CACHE.rekod]
   if(tDate)    rekods=rekods.filter(r=>r.tarikh===tDate)
   else if(tBulan) rekods=rekods.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===tBulan)
   if(tPelajar) rekods=rekods.filter(r=>r.pelajarUid===tPelajar)
@@ -1038,19 +1086,20 @@ async function hapusRekod(rUid){
   showOverlay('Memadam rekod...')
   setSyncStatus('load')
   try{
-    await api({action:'deleteRekod',uid:rUid})
-    // Cari rekod yang dipadam untuk dapat pelajarUid + tarikh
-    const rHapus=getAllRekodCache().find(r=>r.uid===rUid)
-    // Buang dari REKOD_CACHE by uid DAN by pelajar+tarikh (cover kes duplicate entry)
-    Object.keys(REKOD_CACHE).forEach(ym=>{
-      REKOD_CACHE[ym]=REKOD_CACHE[ym].filter(r=>{
-        if(r.uid===rUid) return false
-        if(rHapus&&r.pelajarUid===rHapus.pelajarUid&&r.tarikh===rHapus.tarikh) return false
-        return true
-      })
+    // Padam dari IDB dulu
+    const rHapus=CACHE.rekod.find(r=>r.uid===rUid)
+    // Padam semua entry dengan pelajarUid+tarikh sama (selesai bug duplicate)
+    if(rHapus){
+      const toDelete=CACHE.rekod.filter(r=>r.pelajarUid===rHapus.pelajarUid&&r.tarikh===rHapus.tarikh)
+      await Promise.all(toDelete.map(r=>dbDelete('rekod',r.uid)))
+    } else {
+      await dbDelete('rekod',rUid)
+    }
+    await loadRekodFromDB()
+    // Padam dari Sheets di background
+    api({action:'deleteRekod',uid:rUid}).then(()=>setSyncStatus('ok')).catch(e=>{
+      setSyncStatus('err'); console.warn('Background delete gagal:',e)
     })
-    CACHE.rekod=getAllRekodCache()
-    saveLocalCache()
     renderSejarah()
     setSyncStatus('ok')
     toast('🗑️ Rekod dipadam','err')
@@ -1064,9 +1113,10 @@ async function hapusRekod(rUid){
 async function renderYuran(){
   const ym=document.getElementById('y-bulan').value||curYM()
   const el=document.getElementById('yuran-result')
-  if(!REKOD_CACHE[ym]) el.innerHTML='<div class="empty"><div class="empty-ico">⏳</div><p>Memuatkan rekod...</p></div>'
+  el.innerHTML='<div class="empty"><div class="empty-ico">⏳</div><p>Memuatkan rekod...</p></div>'
   await loadRekodBulan(ym)
-  const rekods=getAllRekodCache().filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym)
+  await loadRekodFromDB()
+  const rekods=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym)
   if(!CACHE.keluarga.length){ el.innerHTML='<div class="empty"><div class="empty-ico">💰</div><p>Tiada keluarga</p></div>'; return }
 
   let totalAll=0
@@ -1153,12 +1203,12 @@ function hantarWA(kUid,ym,mode){
    PAPAN
 ════════════════════════════════ */
 function renderPapan(){
-  const rekodsBulan=getAllRekodCache().filter(r=>r.tarikh&&r.tarikh.slice(0,7)===curYM())
+  const rekodsBulan=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===curYM())
   document.getElementById('st-k').textContent=CACHE.keluarga.length
   document.getElementById('st-p').textContent=CACHE.pelajar.length
   document.getElementById('st-s').textContent=rekodsBulan.reduce((a,r)=>a+(+r.sesi||0),0)
   document.getElementById('st-y').textContent=fmtRM(rekodsBulan.reduce((a,r)=>a+(+r.yuran||0),0))
-  const terkini=[...getAllRekodCache()].sort((a,b)=>b.simpanPada.localeCompare(a.simpanPada)).slice(0,5)
+  const terkini=[...CACHE.rekod].sort((a,b)=>b.simpanPada.localeCompare(a.simpanPada)).slice(0,5)
   const tEl=document.getElementById('papan-terkini')
   tEl.innerHTML=terkini.length?terkini.map(r=>{
     const k=CACHE.keluarga.find(x=>x.uid===r.keluargaUid)
@@ -1183,16 +1233,19 @@ async function janaLaporan(){
   const hingga=document.getElementById('l-hingga').value
   if(!dari||!hingga){ toast('Sila pilih tarikh!','err'); return }
   if(dari>hingga){ toast('Tarikh tidak sah!','err'); return }
-  // Load semua bulan dalam range on-demand
+  // Load semua bulan dalam range dari IDB/Sheets
   const ymDari=dari.slice(0,7), ymHingga=hingga.slice(0,7)
   let ym=ymDari
+  showOverlay('Memuatkan laporan...')
   while(ym<=ymHingga){
     await loadRekodBulan(ym)
     const [y,m]=ym.split('-')
-    const next=new Date(+y, +m, 1)
+    const next=new Date(+y,+m,1)
     ym=next.getFullYear()+'-'+String(next.getMonth()+1).padStart(2,'0')
   }
-  const rekods=getAllRekodCache().filter(r=>r.tarikh>=dari&&r.tarikh<=hingga)
+  await loadRekodFromDB()
+  hideOverlay()
+  const rekods=CACHE.rekod.filter(r=>r.tarikh>=dari&&r.tarikh<=hingga)
   laporanData=CACHE.keluarga.map(k=>{
     const anak=CACHE.pelajar.filter(p=>p.keluargaUid===k.uid)
     const childData=anak.map(p=>{
