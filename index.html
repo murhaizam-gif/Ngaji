@@ -200,7 +200,7 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
 <div class="header">
   <div class="hdr">
     <div class="hdr-logo">🕌</div>
-    <div class="hdr-text"><h1>Kelas Mengaji</h1><p>Sistem Kehadiran & Yuran · <span style="color:rgba(255,255,255,0.4)">v2.5</span></p></div>
+    <div class="hdr-text"><h1>Kelas Mengaji</h1><p>Sistem Kehadiran & Yuran · <span style="color:rgba(255,255,255,0.4)">v2.6</span></p></div>
     <div class="hdr-right">
       <div class="sync-badge"><div class="sync-dot" id="syncDot"></div><span id="syncLbl">—</span></div>
       <button onclick="forceRefresh()" style="background:rgba(255,255,255,0.13);border:1.5px solid rgba(255,255,255,0.2);border-radius:10px;padding:5px 9px;color:#fff;font-size:14px;cursor:pointer" title="Refresh Data">🔄</button>
@@ -397,7 +397,7 @@ function normTarikh(r){
 /* ════════════════════════════════
    INDEXEDDB — Primary storage
 ════════════════════════════════ */
-const DB_NAME='mgj_db', DB_VER=1
+const DB_NAME='mgj_db', DB_VER=2
 let _db=null
 
 function openDB(){
@@ -414,6 +414,8 @@ function openDB(){
         s.createIndex('tarikh','tarikh')
       }
       if(!db.objectStoreNames.contains('meta'))     db.createObjectStore('meta',{keyPath:'k'})
+      // Store baru: uid_log — rekod uid yang perlu dipadam dari Sheets
+      if(!db.objectStoreNames.contains('uid_log'))  db.createObjectStore('uid_log',{keyPath:'uid'})
     }
     req.onsuccess=e=>{ _db=e.target.result; res(_db) }
     req.onerror=e=>rej(e.target.error)
@@ -608,9 +610,9 @@ function tiga_bulan_terkini(){
 /* ════════════════════════════════
    LOAD DATA — IndexedDB first, Sheets background
 ════════════════════════════════ */
-function tiga_bulan_terkini(){
+function bulan_setahun(){
   const result=[], now=new Date()
-  for(let i=0;i<3;i++){
+  for(let i=0;i<12;i++){
     const d=new Date(now.getFullYear(),now.getMonth()-i,1)
     result.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'))
   }
@@ -629,16 +631,17 @@ async function loadAllData(force=false){
 
 async function syncFromSheets(force=false){
   const lastSync=await getMeta('lastSync')||0
-  // Skip kalau sync dalam 5 minit dan bukan force
   if(!force && (Date.now()-lastSync)<5*60*1000) return
   setSyncStatus('load')
   try{
-    const bulan3=tiga_bulan_terkini()
+    // Proses pending uid_log dulu — padam dari Sheets
+    await processPendingDeletes()
+    const bulan12=bulan_setahun()
     let keluarga=[], pelajar=[], rekodList=[]
     try{
       const [r,...rBulans]=await Promise.all([
-        api({action:'getInit',ym:bulan3[0]}),
-        ...bulan3.slice(1).map(ym=>api({action:'getRekodBulan',ym}))
+        api({action:'getInit',ym:bulan12[0]}),
+        ...bulan12.slice(1).map(ym=>api({action:'getRekodBulan',ym}))
       ])
       keluarga=r.keluarga||[]; pelajar=r.pelajar||[]
       rekodList=[...(r.rekod||[]).map(normTarikh)]
@@ -648,19 +651,20 @@ async function syncFromSheets(force=false){
       const [rK,rP,...rRs]=await Promise.all([
         api({action:'getKeluarga'}),
         api({action:'getPelajar'}),
-        ...bulan3.map(ym=>api({action:'getRekodBulan',ym}))
+        ...bulan12.map(ym=>api({action:'getRekodBulan',ym}))
       ])
       keluarga=rK.data||[]; pelajar=rP.data||[]
       rRs.forEach(rb=>{ rekodList.push(...(rb.data||[]).map(normTarikh)) })
     }
+    // Load uid_log — skip rekod yang dah dimark deleted
+    const deletedUids=await getDeletedUids()
+    const rekodBersih=rekodList.filter(r=>!deletedUids.has(r.uid))
     // Simpan ke IDB
     await Promise.all(keluarga.map(x=>dbPut('keluarga',x)))
     await Promise.all(pelajar.map(x=>dbPut('pelajar',x)))
-    await Promise.all(rekodList.map(x=>dbUpsertRekod(x)))
+    await Promise.all(rekodBersih.map(x=>dbUpsertRekod(x)))
     await setMeta('lastSync',Date.now())
-    // Tandakan 3 bulan sebagai synced
-    await Promise.all(bulan3.map(ym=>setMeta('synced_'+ym, Date.now())))
-    // Reload ke CACHE
+    await Promise.all(bulan12.map(ym=>setMeta('synced_'+ym,Date.now())))
     CACHE.keluarga=keluarga; CACHE.pelajar=pelajar
     await loadRekodFromDB()
     setSyncStatus('ok')
@@ -671,16 +675,46 @@ async function syncFromSheets(force=false){
   }
 }
 
-// Load bulan on-demand — check meta dulu, kalau dah sync skip Sheets
+/* ════════════════════════════════
+   UID LOG — track deleted/edited uids
+════════════════════════════════ */
+// Tambah uid ke log (pending delete dari Sheets)
+async function logDeleteUid(uid){
+  return dbPut('uid_log',{uid, ts:Date.now()})
+}
+
+// Dapatkan Set semua uid yang deleted
+async function getDeletedUids(){
+  const list=await dbGetAll('uid_log')
+  return new Set(list.map(x=>x.uid))
+}
+
+// Process pending deletes — hantar ke Sheets, buang dari log kalau berjaya
+async function processPendingDeletes(){
+  if(!SCRIPT_URL) return
+  const list=await dbGetAll('uid_log')
+  if(!list.length) return
+  await Promise.all(list.map(async item=>{
+    try{
+      await api({action:'deleteRekod',uid:item.uid})
+      await dbDelete('uid_log',item.uid)
+    }catch(e){
+      console.warn('Retry delete gagal untuk uid:',item.uid,e)
+    }
+  }))
+}
+
+// Load bulan on-demand — check meta dulu
 async function loadRekodBulan(ym){
   const synced=await getMeta('synced_'+ym)
-  if(synced) return  // Bulan ni dah pernah sync, guna IDB terus
+  if(synced) return
   if(!SCRIPT_URL) return
   try{
     const r=await api({action:'getRekodBulan',ym})
-    const list=(r.data||[]).map(normTarikh)
+    const deletedUids=await getDeletedUids()
+    const list=(r.data||[]).map(normTarikh).filter(x=>!deletedUids.has(x.uid))
     await Promise.all(list.map(x=>dbUpsertRekod(x)))
-    await setMeta('synced_'+ym, Date.now())  // Tanda bulan dah sync
+    await setMeta('synced_'+ym,Date.now())
     await loadRekodFromDB()
   }catch(e){
     console.warn('loadRekodBulan gagal:',e)
@@ -688,14 +722,10 @@ async function loadRekodBulan(ym){
 }
 
 async function forceRefresh(){
-  // Padam semua rekod dalam IDB dan clear semua meta synced_*
   const db=await openDB()
   await new Promise(res=>{ const req=db.transaction('rekod','readwrite').objectStore('rekod').clear(); req.onsuccess=res })
-  // Clear semua meta synced_bulan
   const allMeta=await dbGetAll('meta')
-  await Promise.all(
-    allMeta.filter(m=>m.k.startsWith('synced_')).map(m=>dbDelete('meta',m.k))
-  )
+  await Promise.all(allMeta.filter(m=>m.k.startsWith('synced_')).map(m=>dbDelete('meta',m.k)))
   await setMeta('lastSync',0)
   await loadAllData(true)
   toast('🔄 Data direfresh!')
@@ -1015,13 +1045,25 @@ async function simpanRekod(){
   showOverlay(wasEdit?'Mengemaskini rekod...':'Menyimpan rekod...')
   setSyncStatus('load')
   try{
-    // Simpan ke IDB dulu (local-first)
+    // Kalau edit — log uid lama supaya sync tak bawa balik rekod lama
+    if(wasEdit && editUid && editUid!==obj.uid){
+      await logDeleteUid(editUid)
+    }
+    // Simpan ke IDB
     await dbUpsertRekod(obj)
     await loadRekodFromDB()
-    // Push ke Sheets di background
-    api({action:'saveRekod',data:obj}).then(()=>setSyncStatus('ok')).catch(e=>{
-      setSyncStatus('err'); console.warn('Background push gagal:',e)
-    })
+    // Push ke Sheets (fire and forget)
+    api({action:'saveRekod',data:obj})
+      .then(()=>{
+        // Kalau edit berjaya, delete uid lama dari Sheets dan buang dari log
+        if(wasEdit && editUid && editUid!==obj.uid){
+          api({action:'deleteRekod',uid:editUid})
+            .then(()=>dbDelete('uid_log',editUid))
+            .catch(e=>console.warn('Delete uid lama gagal:',e))
+        }
+        setSyncStatus('ok')
+      })
+      .catch(e=>{ setSyncStatus('err'); console.warn('Push rekod gagal:',e) })
     // Reset form
     document.getElementById('r-sesi').value='1'
     document.getElementById('r-catatan').value=''
@@ -1084,20 +1126,22 @@ async function hapusRekod(rUid){
   showOverlay('Memadam rekod...')
   setSyncStatus('load')
   try{
-    // Padam dari IDB dulu
+    // Cari semua entry untuk pelajar+tarikh yang sama
     const rHapus=CACHE.rekod.find(r=>r.uid===rUid)
-    // Padam semua entry dengan pelajarUid+tarikh sama (selesai bug duplicate)
-    if(rHapus){
-      const toDelete=CACHE.rekod.filter(r=>r.pelajarUid===rHapus.pelajarUid&&r.tarikh===rHapus.tarikh)
-      await Promise.all(toDelete.map(r=>dbDelete('rekod',r.uid)))
-    } else {
-      await dbDelete('rekod',rUid)
-    }
+    const toDelete=rHapus
+      ? CACHE.rekod.filter(r=>r.pelajarUid===rHapus.pelajarUid&&r.tarikh===rHapus.tarikh)
+      : [{uid:rUid}]
+    // Log semua uid ke uid_log — supaya sync tak bawa balik
+    await Promise.all(toDelete.map(r=>logDeleteUid(r.uid)))
+    // Padam dari IDB
+    await Promise.all(toDelete.map(r=>dbDelete('rekod',r.uid)))
     await loadRekodFromDB()
-    // Padam dari Sheets di background
-    api({action:'deleteRekod',uid:rUid}).then(()=>setSyncStatus('ok')).catch(e=>{
-      setSyncStatus('err'); console.warn('Background delete gagal:',e)
-    })
+    // Terus delete dari Sheets (fire and forget, retry via uid_log kalau gagal)
+    Promise.all(toDelete.map(r=>
+      api({action:'deleteRekod',uid:r.uid})
+        .then(()=>dbDelete('uid_log',r.uid))
+        .catch(e=>console.warn('Delete Sheets gagal, pending retry:',r.uid,e))
+    ))
     renderSejarah()
     setSyncStatus('ok')
     toast('🗑️ Rekod dipadam','err')
