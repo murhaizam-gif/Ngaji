@@ -200,7 +200,7 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
 <div class="header">
   <div class="hdr">
     <div class="hdr-logo">🕌</div>
-    <div class="hdr-text"><h1>Kelas Mengaji</h1><p>Sistem Kehadiran & Yuran · <span style="color:rgba(255,255,255,0.4)">v2.7</span></p></div>
+    <div class="hdr-text"><h1>Kelas Mengaji</h1><p>Sistem Kehadiran & Yuran · <span style="color:rgba(255,255,255,0.4)">v2.8</span></p></div>
     <div class="hdr-right">
       <div class="sync-badge"><div class="sync-dot" id="syncDot"></div><span id="syncLbl">—</span></div>
       <button onclick="forceRefresh()" style="background:rgba(255,255,255,0.13);border:1.5px solid rgba(255,255,255,0.2);border-radius:10px;padding:5px 9px;color:#fff;font-size:14px;cursor:pointer" title="Refresh Data">🔄</button>
@@ -1045,9 +1045,9 @@ async function simpanRekod(){
   showOverlay(wasEdit?'Mengemaskini rekod...':'Menyimpan rekod...')
   setSyncStatus('load')
   try{
-    // Kumpul semua uid lama untuk pelajar+tarikh ini — log semua supaya sync tak bawa balik
+    // Kumpul uid lama untuk pelajar+tarikh ini — KECUALI uid rekod baru
     const uidLama=CACHE.rekod
-      .filter(r=>r.pelajarUid===pUid&&r.tarikh===tarikh)
+      .filter(r=>r.pelajarUid===pUid&&r.tarikh===tarikh&&r.uid!==obj.uid)
       .map(r=>r.uid)
     await Promise.all(uidLama.map(u=>logDeleteUid(u)))
     // Simpan ke IDB — dbUpsertRekod akan padam entry lama
