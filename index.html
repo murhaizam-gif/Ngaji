@@ -200,7 +200,7 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
 <div class="header">
   <div class="hdr">
     <div class="hdr-logo">🕌</div>
-    <div class="hdr-text"><h1>Kelas Mengaji</h1><p>Sistem Kehadiran & Yuran · <span style="color:rgba(255,255,255,0.4)">v2.6</span></p></div>
+    <div class="hdr-text"><h1>Kelas Mengaji</h1><p>Sistem Kehadiran & Yuran · <span style="color:rgba(255,255,255,0.4)">v2.7</span></p></div>
     <div class="hdr-right">
       <div class="sync-badge"><div class="sync-dot" id="syncDot"></div><span id="syncLbl">—</span></div>
       <button onclick="forceRefresh()" style="background:rgba(255,255,255,0.13);border:1.5px solid rgba(255,255,255,0.2);border-radius:10px;padding:5px 9px;color:#fff;font-size:14px;cursor:pointer" title="Refresh Data">🔄</button>
@@ -1045,22 +1045,23 @@ async function simpanRekod(){
   showOverlay(wasEdit?'Mengemaskini rekod...':'Menyimpan rekod...')
   setSyncStatus('load')
   try{
-    // Kalau edit — log uid lama supaya sync tak bawa balik rekod lama
-    if(wasEdit && editUid && editUid!==obj.uid){
-      await logDeleteUid(editUid)
-    }
-    // Simpan ke IDB
+    // Kumpul semua uid lama untuk pelajar+tarikh ini — log semua supaya sync tak bawa balik
+    const uidLama=CACHE.rekod
+      .filter(r=>r.pelajarUid===pUid&&r.tarikh===tarikh)
+      .map(r=>r.uid)
+    await Promise.all(uidLama.map(u=>logDeleteUid(u)))
+    // Simpan ke IDB — dbUpsertRekod akan padam entry lama
     await dbUpsertRekod(obj)
     await loadRekodFromDB()
-    // Push ke Sheets (fire and forget)
+    // Push ke Sheets — save baru + delete semua uid lama dari Sheets
     api({action:'saveRekod',data:obj})
       .then(()=>{
-        // Kalau edit berjaya, delete uid lama dari Sheets dan buang dari log
-        if(wasEdit && editUid && editUid!==obj.uid){
-          api({action:'deleteRekod',uid:editUid})
-            .then(()=>dbDelete('uid_log',editUid))
-            .catch(e=>console.warn('Delete uid lama gagal:',e))
-        }
+        // Delete semua uid lama dari Sheets dan buang dari uid_log
+        Promise.all(uidLama.map(u=>
+          api({action:'deleteRekod',uid:u})
+            .then(()=>dbDelete('uid_log',u))
+            .catch(e=>console.warn('Delete uid lama gagal, pending retry:',u,e))
+        ))
         setSyncStatus('ok')
       })
       .catch(e=>{ setSyncStatus('err'); console.warn('Push rekod gagal:',e) })
