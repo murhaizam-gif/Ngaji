@@ -257,7 +257,7 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
     <div class="yuran-prev" id="r-prev" style="display:none">💰 Yuran: <span id="r-prev-amt" style="font-family:'JetBrains Mono',monospace;font-size:14px"></span></div>
 
     <label>Catatan</label>
-    <textarea id="r-catatan" placeholder="Contoh: Belajar tajwid..."></textarea>
+    <textarea id="r-catatan" placeholder="Contoh: Pelajar aktif, ada soalan tajwid..."></textarea>
 
     <div class="divider"></div>
     <div class="card-title">🔖 Bookmark — Bacaan Sesi Ini</div>
@@ -277,7 +277,7 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
   <div class="card">
     <div class="card-title">➕ Daftar Keluarga Baru</div>
     <label>Nama Ibu Bapa / Penjaga</label>
-    <input type="text" id="k-nama" placeholder="Contoh: Tn.Ahmad bin Sulaiman">
+    <input type="text" id="k-nama" placeholder="Contoh: Tn. Hj. Ahmad bin Sulaiman">
     <label>No. Telefon (WhatsApp)</label>
     <input type="tel" id="k-tel" placeholder="Contoh: 0123456789">
     <button class="btn btn-biru" onclick="tambahKeluarga()">➕ Daftar Keluarga</button>
@@ -397,7 +397,7 @@ function normTarikh(r){
 /* ════════════════════════════════
    INDEXEDDB — Primary storage
 ════════════════════════════════ */
-const DB_NAME='mgj_db', DB_VER=2
+const DB_NAME='mgj_db', DB_VER=3
 let _db=null
 
 function openDB(){
@@ -414,8 +414,11 @@ function openDB(){
         s.createIndex('tarikh','tarikh')
       }
       if(!db.objectStoreNames.contains('meta'))     db.createObjectStore('meta',{keyPath:'k'})
-      // Store baru: uid_log — rekod uid yang perlu dipadam dari Sheets
+      // uid_log: rekod uid yang PENDING delete ke Sheets (belum berjaya)
       if(!db.objectStoreNames.contains('uid_log'))  db.createObjectStore('uid_log',{keyPath:'uid'})
+      // tombstone: rekod uid yang TELAH dipadam — kekal selama 90 hari
+      // Ini yang cegah rekod muncul balik masa sync walaupun uid_log dah kosong
+      if(!db.objectStoreNames.contains('tombstone')) db.createObjectStore('tombstone',{keyPath:'uid'})
     }
     req.onsuccess=e=>{ _db=e.target.result; res(_db) }
     req.onerror=e=>rej(e.target.error)
@@ -494,6 +497,24 @@ async function loadRekodFromDB(){
 
 async function getMeta(k){ const r=await dbGet('meta',k); return r?r.v:null }
 async function setMeta(k,v){ return dbPut('meta',{k,v}) }
+
+/* ════════════════════════════════
+   TOMBSTONE — cegah rekod dipadam dari muncul balik
+════════════════════════════════ */
+// Simpan uid ke tombstone (90 hari TTL)
+async function addTombstone(uid){
+  return dbPut('tombstone',{uid, ts:Date.now()})
+}
+
+// Dapatkan Set semua uid dalam tombstone (buang yang > 90 hari)
+async function getTombstoneUids(){
+  const list=await dbGetAll('tombstone')
+  const cutoff=Date.now()-(90*24*60*60*1000)
+  const stale=list.filter(x=>x.ts<cutoff)
+  // Buang tombstone lama secara async
+  if(stale.length) stale.forEach(x=>dbDelete('tombstone',x.uid))
+  return new Set(list.filter(x=>x.ts>=cutoff).map(x=>x.uid))
+}
 
 /* ════════════════════════════════
    HELPERS
@@ -678,15 +699,16 @@ async function syncFromSheets(force=false){
 /* ════════════════════════════════
    UID LOG — track deleted/edited uids
 ════════════════════════════════ */
-// Tambah uid ke log (pending delete dari Sheets)
+// Tambah uid ke log (pending delete dari Sheets) DAN tombstone (cegah sync bawa balik)
 async function logDeleteUid(uid){
+  await addTombstone(uid)  // ← tombstone kekal walaupun uid_log dibuang
   return dbPut('uid_log',{uid, ts:Date.now()})
 }
 
-// Dapatkan Set semua uid yang deleted
+// Dapatkan Set semua uid yang deleted — guna tombstone (kekal 90 hari)
+// uid_log hanya untuk track pending Sheets delete, bukan untuk filter sync
 async function getDeletedUids(){
-  const list=await dbGetAll('uid_log')
-  return new Set(list.map(x=>x.uid))
+  return getTombstoneUids()
 }
 
 // Process pending deletes — hantar ke Sheets, buang dari log kalau berjaya
@@ -723,7 +745,10 @@ async function loadRekodBulan(ym){
 
 async function forceRefresh(){
   const db=await openDB()
+  // Clear rekod store
   await new Promise(res=>{ const req=db.transaction('rekod','readwrite').objectStore('rekod').clear(); req.onsuccess=res })
+  // Clear tombstone (user sengaja nak full reset)
+  await new Promise(res=>{ const req=db.transaction('tombstone','readwrite').objectStore('tombstone').clear(); req.onsuccess=res })
   const allMeta=await dbGetAll('meta')
   await Promise.all(allMeta.filter(m=>m.k.startsWith('synced_')).map(m=>dbDelete('meta',m.k)))
   await setMeta('lastSync',0)
