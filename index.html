@@ -194,30 +194,30 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
 .modal-btns .btn{margin-top:0;flex:1}
 
 /* PANEL PROFIL PELAJAR */
-.profil-panel{border-radius:13px;overflow:hidden;border:1.5px solid var(--border);background:var(--card);box-shadow:var(--shadow);margin:10px 0 13px}
-.profil-header{display:flex;align-items:center;gap:11px;padding:12px 13px;cursor:pointer;user-select:none;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.profil-panel{border-radius:13px;overflow:hidden;border:1.5px solid var(--border);background:var(--card);box-shadow:var(--shadow);margin-top:10px}
+.profil-header{display:flex;align-items:center;gap:11px;padding:12px 13px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:background .15s}
 .profil-header:active{background:var(--bg)}
-.profil-avatar{width:38px;height:38px;flex-shrink:0;border-radius:11px;background:linear-gradient(135deg,var(--hijau),#1b4332);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;letter-spacing:-.5px}
+.profil-av{width:38px;height:38px;flex-shrink:0;border-radius:11px;background:linear-gradient(135deg,var(--hijau),#1b4332);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;letter-spacing:-.5px}
 .profil-meta{flex:1;min-width:0}
 .profil-nama{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .profil-sub{font-size:10px;color:var(--muted);font-weight:600;margin-top:2px}
 .profil-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
-.profil-bkmk-badge{font-size:9px;font-weight:800;color:var(--ungu);background:var(--ungu-lt);border-radius:6px;padding:3px 7px;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
+.profil-bkmk-badge{font-size:9px;font-weight:800;color:var(--ungu);background:var(--ungu-lt);border-radius:6px;padding:3px 7px;white-space:nowrap;max-width:115px;overflow:hidden;text-overflow:ellipsis}
 .profil-chev{font-size:9px;color:var(--muted);font-weight:700;transition:transform .25s}
 .profil-chev.open{transform:rotate(180deg)}
 .profil-body{border-top:1px solid var(--border);max-height:0;overflow:hidden;transition:max-height .35s ease}
-.profil-body.open{max-height:1200px}
+.profil-body.open{max-height:1400px}
 .profil-inner{padding:9px 12px 12px}
 .profil-count{font-size:10px;font-weight:800;color:var(--hijau);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 .p-rekod{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 11px;margin-bottom:6px}
 .p-rekod:last-child{margin-bottom:0}
-.p-rekod-tarikh{font-size:10px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:5px}
-.p-rekod-tarikh::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--hijau-lg);flex-shrink:0}
+.p-tarikh{font-size:10px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.p-tarikh::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--hijau-lg);flex-shrink:0}
 .p-bkmk{display:flex;align-items:flex-start;gap:6px;background:var(--ungu-lt);border-radius:7px;padding:6px 9px;margin-bottom:4px}
 .p-bkmk-text{font-size:11px;font-weight:700;color:var(--ungu);line-height:1.5}
 .p-cat{display:flex;align-items:flex-start;gap:6px;background:var(--emas-lt);border-radius:7px;padding:6px 9px}
 .p-cat-text{font-size:11px;font-weight:600;color:#92620a;line-height:1.5;font-style:italic}
-.p-empty{font-size:11px;color:var(--muted);font-weight:600;font-style:italic}
+.p-tiada{font-size:11px;color:var(--muted);font-weight:600;font-style:italic}
 </style>
 </head>
 <body>
@@ -264,30 +264,28 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
     <label>Pilih Pelajar</label>
     <select id="r-pelajar" onchange="onPilihPelajar()"><option value="">-- Pilih Pelajar --</option></select>
     <div id="r-fam-info" style="font-size:11px;color:var(--biru);font-weight:700;margin-top:5px;display:none"></div>
-  </div>
 
-  <!-- PANEL PROFIL PELAJAR -->
-  <div id="profil-panel" class="profil-panel" style="display:none">
-    <div class="profil-header" onclick="toggleProfilPanel()">
-      <div class="profil-avatar" id="pp-av"></div>
-      <div class="profil-meta">
-        <div class="profil-nama" id="pp-nama"></div>
-        <div class="profil-sub" id="pp-sub"></div>
+    <!-- PANEL PROFIL -->
+    <div id="profil-panel" class="profil-panel" style="display:none">
+      <div class="profil-header" onclick="toggleProfilPanel()">
+        <div class="profil-av" id="pp-av"></div>
+        <div class="profil-meta">
+          <div class="profil-nama" id="pp-nama"></div>
+          <div class="profil-sub" id="pp-sub"></div>
+        </div>
+        <div class="profil-right">
+          <div class="profil-bkmk-badge" id="pp-bkmk"></div>
+          <div class="profil-chev" id="pp-chev">▼ Sejarah</div>
+        </div>
       </div>
-      <div class="profil-right">
-        <div class="profil-bkmk-badge" id="pp-bkmk"></div>
-        <div class="profil-chev" id="pp-chev">▼ Sejarah</div>
+      <div class="profil-body" id="pp-body">
+        <div class="profil-inner">
+          <div class="profil-count" id="pp-count"></div>
+          <div id="pp-list"></div>
+        </div>
       </div>
     </div>
-    <div class="profil-body" id="pp-body">
-      <div class="profil-inner">
-        <div class="profil-count" id="pp-count"></div>
-        <div id="pp-list"></div>
-      </div>
-    </div>
-  </div>
 
-  <div class="card">
     <label>Tarikh Sesi</label>
     <input type="date" id="r-tarikh" onchange="checkExisting()">
 
@@ -446,7 +444,7 @@ function normTarikh(r){
 /* ════════════════════════════════
    INDEXEDDB — Primary storage
 ════════════════════════════════ */
-const DB_NAME='mgj_db', DB_VER=2
+const DB_NAME='mgj_db', DB_VER=3
 let _db=null
 
 function openDB(){
@@ -463,8 +461,11 @@ function openDB(){
         s.createIndex('tarikh','tarikh')
       }
       if(!db.objectStoreNames.contains('meta'))     db.createObjectStore('meta',{keyPath:'k'})
-      // Store baru: uid_log — rekod uid yang perlu dipadam dari Sheets
+      // uid_log: rekod uid yang PENDING delete ke Sheets (belum berjaya)
       if(!db.objectStoreNames.contains('uid_log'))  db.createObjectStore('uid_log',{keyPath:'uid'})
+      // tombstone: rekod uid yang TELAH dipadam — kekal selama 90 hari
+      // Ini yang cegah rekod muncul balik masa sync walaupun uid_log dah kosong
+      if(!db.objectStoreNames.contains('tombstone')) db.createObjectStore('tombstone',{keyPath:'uid'})
     }
     req.onsuccess=e=>{ _db=e.target.result; res(_db) }
     req.onerror=e=>rej(e.target.error)
@@ -543,6 +544,24 @@ async function loadRekodFromDB(){
 
 async function getMeta(k){ const r=await dbGet('meta',k); return r?r.v:null }
 async function setMeta(k,v){ return dbPut('meta',{k,v}) }
+
+/* ════════════════════════════════
+   TOMBSTONE — cegah rekod dipadam dari muncul balik
+════════════════════════════════ */
+// Simpan uid ke tombstone (90 hari TTL)
+async function addTombstone(uid){
+  return dbPut('tombstone',{uid, ts:Date.now()})
+}
+
+// Dapatkan Set semua uid dalam tombstone (buang yang > 90 hari)
+async function getTombstoneUids(){
+  const list=await dbGetAll('tombstone')
+  const cutoff=Date.now()-(90*24*60*60*1000)
+  const stale=list.filter(x=>x.ts<cutoff)
+  // Buang tombstone lama secara async
+  if(stale.length) stale.forEach(x=>dbDelete('tombstone',x.uid))
+  return new Set(list.filter(x=>x.ts>=cutoff).map(x=>x.uid))
+}
 
 /* ════════════════════════════════
    HELPERS
@@ -727,15 +746,16 @@ async function syncFromSheets(force=false){
 /* ════════════════════════════════
    UID LOG — track deleted/edited uids
 ════════════════════════════════ */
-// Tambah uid ke log (pending delete dari Sheets)
+// Tambah uid ke log (pending delete dari Sheets) DAN tombstone (cegah sync bawa balik)
 async function logDeleteUid(uid){
+  await addTombstone(uid)  // ← tombstone kekal walaupun uid_log dibuang
   return dbPut('uid_log',{uid, ts:Date.now()})
 }
 
-// Dapatkan Set semua uid yang deleted
+// Dapatkan Set semua uid yang deleted — guna tombstone (kekal 90 hari)
+// uid_log hanya untuk track pending Sheets delete, bukan untuk filter sync
 async function getDeletedUids(){
-  const list=await dbGetAll('uid_log')
-  return new Set(list.map(x=>x.uid))
+  return getTombstoneUids()
 }
 
 // Process pending deletes — hantar ke Sheets, buang dari log kalau berjaya
@@ -772,7 +792,10 @@ async function loadRekodBulan(ym){
 
 async function forceRefresh(){
   const db=await openDB()
+  // Clear rekod store
   await new Promise(res=>{ const req=db.transaction('rekod','readwrite').objectStore('rekod').clear(); req.onsuccess=res })
+  // Clear tombstone (user sengaja nak full reset)
+  await new Promise(res=>{ const req=db.transaction('tombstone','readwrite').objectStore('tombstone').clear(); req.onsuccess=res })
   const allMeta=await dbGetAll('meta')
   await Promise.all(allMeta.filter(m=>m.k.startsWith('synced_')).map(m=>dbDelete('meta',m.k)))
   await setMeta('lastSync',0)
@@ -1004,45 +1027,32 @@ function renderProfilPanel(pUid){
   const p=CACHE.pelajar.find(x=>x.uid===pUid)
   const k=p?CACHE.keluarga.find(x=>x.uid===p.keluargaUid):null
   if(!p){ document.getElementById('profil-panel').style.display='none'; return }
-
-  // Ambil semua rekod pelajar ini, sort terbaru dulu
   const rekods=[...CACHE.rekod]
     .filter(r=>r.pelajarUid===pUid)
     .sort((a,b)=>b.tarikh.localeCompare(a.tarikh))
-
-  // Bookmark terkini
   const terkini=rekods.find(r=>r.muka)
   const bkmkTxt=terkini
     ? '🔖 m/s '+terkini.muka+(terkini.surah?' · '+terkini.surah:'')
     : '🔖 Tiada bookmark'
-
-  // Isi header
   document.getElementById('pp-av').textContent=inisial(p.nama)
   document.getElementById('pp-nama').textContent=p.nama
   document.getElementById('pp-sub').textContent=(k?'👨‍👩‍👧‍👦 '+k.nama+' · ':'')+rekods.length+' rekod'
   document.getElementById('pp-bkmk').textContent=bkmkTxt
-  document.getElementById('pp-count').textContent='📋 '+rekods.length+(rekods.length?'':' — tiada rekod lagi')+' rekod'
-
-  // Render senarai rekod
+  document.getElementById('pp-count').textContent='📋 '+rekods.length+' rekod'
   document.getElementById('pp-list').innerHTML=rekods.length
     ? rekods.map(r=>{
         const bkmk=r.muka
-          ? '<div class="p-bkmk"><span style="font-size:12px;flex-shrink:0">🔖</span><span class="p-bkmk-text">m/s '+r.muka+(r.ayat?' · '+r.ayat:'')+(r.surah?' · '+r.surah:'')+'</span></div>'
+          ? '<div class="p-bkmk"><span style="font-size:12px;flex-shrink:0;margin-top:1px">🔖</span><span class="p-bkmk-text">m/s '+r.muka+(r.ayat?' · '+r.ayat:'')+(r.surah?' · '+r.surah:'')+'</span></div>'
           : ''
         const cat=r.catatan
-          ? '<div class="p-cat"><span style="font-size:12px;flex-shrink:0">📝</span><span class="p-cat-text">'+r.catatan+'</span></div>'
+          ? '<div class="p-cat"><span style="font-size:12px;flex-shrink:0;margin-top:1px">📝</span><span class="p-cat-text">'+r.catatan+'</span></div>'
           : ''
-        const tiada=!r.muka&&!r.catatan
-          ? '<div class="p-empty">Tiada bookmark atau catatan</div>'
-          : ''
-        return '<div class="p-rekod">'+
-          '<div class="p-rekod-tarikh">'+fmtTarikh(r.tarikh)+'</div>'+
-          bkmk+(bkmk&&cat?'<div style="height:4px"></div>':'')+cat+tiada+
-        '</div>'
+        const gap=bkmk&&cat?'<div style="height:4px"></div>':''
+        const tiada=!r.muka&&!r.catatan?'<div class="p-tiada">Tiada bookmark atau catatan</div>':''
+        return '<div class="p-rekod"><div class="p-tarikh">'+fmtTarikh(r.tarikh)+'</div>'+bkmk+gap+cat+tiada+'</div>'
       }).join('')
-    : '<div class="p-empty" style="padding:6px 2px">Belum ada rekod untuk pelajar ini.</div>'
-
-  // Reset collapsed state
+    : '<div class="p-tiada" style="padding:4px 2px">Belum ada rekod untuk pelajar ini.</div>'
+  // Reset collapsed
   _profilOpen=false
   document.getElementById('pp-body').classList.remove('open')
   document.getElementById('pp-chev').classList.remove('open')
