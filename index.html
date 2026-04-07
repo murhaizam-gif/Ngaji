@@ -1346,7 +1346,7 @@ function hantarWA(kUid,ym,mode){
   const rekods=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym)
   const anak=mode==='semua'?CACHE.pelajar.filter(p=>p.keluargaUid===kUid):CACHE.pelajar.filter(p=>p.uid===mode)
   if(!anak.length){ toast('Tiada pelajar!','err'); return }
-  let msg='Allahumma solli ala Saidina Muhammad \n\n (Ya Allah, limpahkanlah rahmat ke atas penghulu kami Nabi Muhammad). \n\n Assalamualaikum w.b.t,\n\n'
+  let msg='Allahumma solli ala Saidina Muhammad\n (Ya Allah, limpahkanlah rahmat ke atas penghulu kami Nabi Muhammad). \n\n Assalamualaikum w.b.t,\n\n'
   msg+=(mode==='semua'?'Berikut rekod kehadiran anak-anak *'+k.nama+'*':'Berikut rekod kehadiran *'+anak[0].nama+'*')+' bagi bulan *'+fmtBulan(ym)+'*:\n\n'
   let grand=0
   anak.forEach(p=>{
@@ -1354,7 +1354,7 @@ function hantarWA(kUid,ym,mode){
     const jSesi=pr.reduce((a,r)=>a+(+r.sesi||0),0)
     const jYuran=pr.reduce((a,r)=>a+(+r.yuran||0),0)
     grand+=jYuran
-    if(mode==='semua'){ msg+='👦 *'+p.nama.toUpperCase()+'*\n'+'─'.repeat(26)+'\n' }
+    if(mode==='semua'){ msg+='👦 *'+p.nama.toUpperCase()+'*\n'+'─'.repeat(20)+'\n' }
     if(pr.length){
       pr.forEach(r=>{
         msg+='📅 '+fmtTarikh(r.tarikh)+' — '+r.sesi+' sesi\n'
@@ -1365,9 +1365,9 @@ function hantarWA(kUid,ym,mode){
     msg+='Jumlah: '+jSesi+' sesi | *'+fmtRM(jYuran)+'*\n'
     if(mode==='semua') msg+='\n'
   })
-  msg+='═'.repeat(26)+'\n'
+  msg+='═'.repeat(20)+'\n'
   msg+=(mode==='semua'&&anak.length>1?'💰 Jumlah Keseluruhan: *'+fmtRM(grand)+'*\n':'💰 Jumlah Yuran: *'+fmtRM(grand)+'*\n')
-  msg+='\nSekian, terima kasih. 🙏'
+  msg+='\nSekian, terima kasih.'
   const tel=k.tel.replace(/\D/g,'')
   window.open('https://wa.me/'+(tel.startsWith('0')?'6'+tel:tel)+'?text='+encodeURIComponent(msg),'_blank')
 }
