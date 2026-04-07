@@ -194,8 +194,22 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
 .modal-btns .btn{margin-top:0;flex:1}
 
 /* PANEL PROFIL PELAJAR */
-.profil-panel{border-radius:13px;overflow:hidden;border:1.5px solid var(--border);background:var(--card);box-shadow:var(--shadow);margin-top:10px}
-.profil-header{display:flex;align-items:center;gap:11px;padding:12px 13px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:background .15s}
+/*.profil-panel{border-radius:13px;overflow:hidden;border:1.5px solid var(--border);background:var(--card);box-shadow:var(--shadow);margin-top:10px}*/
+.profil-panel{
+  border-radius:13px;
+  border:1.5px solid var(--border);
+  background:var(--card);
+  box-shadow:var(--shadow);
+  margin-top:10px;
+
+  display:flex;
+  flex-direction:column;
+  max-height:400px; /* 👉 tinggi keseluruhan panel */
+}
+.profil-header{
+  flex-shrink:0; /* 👉 penting! bagi header tak mengecil */
+  }
+/*.profil-header{display:flex;align-items:center;gap:11px;padding:12px 13px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:background .15s}*/
 .profil-header:active{background:var(--bg)}
 .profil-av{width:38px;height:38px;flex-shrink:0;border-radius:11px;background:linear-gradient(135deg,var(--hijau),#1b4332);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#fff;letter-spacing:-.5px}
 .profil-meta{flex:1;min-width:0}
@@ -205,8 +219,20 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
 .profil-bkmk-badge{font-size:9px;font-weight:800;color:var(--ungu);background:var(--ungu-lt);border-radius:6px;padding:3px 7px;white-space:nowrap;max-width:115px;overflow:hidden;text-overflow:ellipsis}
 .profil-chev{font-size:9px;color:var(--muted);font-weight:700;transition:transform .25s}
 .profil-chev.open{transform:rotate(180deg)}
-.profil-body{border-top:1px solid var(--border);max-height:0;overflow:hidden;transition:max-height .35s ease}
-.profil-body.open{max-height:1400px}
+/*.profil-body{border-top:1px solid var(--border);max-height:0;overflow:hidden;transition:max-height .35s ease}
+.profil-body.open{max-height:1400px}*/
+.profil-body{
+  border-top:1px solid var(--border);
+  max-height:0;
+  overflow:hidden;
+  transition:max-height .35s ease;
+}
+
+/* bila buka */
+.profil-body.open{
+  max-height:100%;
+  overflow-y:auto; /* 👉 scroll dalam body sahaja */
+}
 .profil-inner{padding:9px 12px 12px}
 .profil-count{font-size:10px;font-weight:800;color:var(--hijau);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 .p-rekod{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 11px;margin-bottom:6px}
