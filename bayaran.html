@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bayaran — Kelas Mengaji</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+:root{
+  --bg:#f0ede8;--card:#fff;--border:#e2ddd6;
+  --hijau:#2d6a4f;--hijau-lg:#52b788;--hijau-lt:#d8f3dc;
+  --emas:#b5830a;--emas-lt:#fef3c7;
+  --merah:#c0392b;--merah-lt:#fdecea;
+  --ungu:#6d3a9c;--ungu-lt:#ede9fe;
+  --biru:#1a56a0;--biru-lt:#dbeafe;
+  --text:#1c1a17;--muted:#7a6e62;
+  --shadow:0 2px 14px rgba(0,0,0,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;padding-top:68px}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--hijau) 0%,#1b4332 100%);padding:13px 16px;position:fixed;top:0;left:0;right:0;z-index:200;box-shadow:0 4px 20px rgba(45,106,79,0.4)}
+.hdr{display:flex;align-items:center;gap:11px}
+.hdr-back{width:36px;height:36px;background:rgba(255,255,255,0.13);border:1.5px solid rgba(255,255,255,0.2);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;cursor:pointer;color:#fff;text-decoration:none}
+.hdr-text h1{font-size:16px;font-weight:900;color:#fff}
+.hdr-text p{font-size:10px;color:rgba(255,255,255,0.55);font-family:'JetBrains Mono',monospace;margin-top:1px}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.hdr-date{font-size:10px;color:rgba(255,255,255,0.65);font-family:'JetBrains Mono',monospace;text-align:right;line-height:1.7}
+.sync-badge{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.12);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.8)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#aaa;flex-shrink:0;transition:background .3s}
+.sync-dot.ok{background:#4ade80}
+.sync-dot.err{background:#f87171}
+.sync-dot.loading{background:#fbbf24;animation:blink 0.7s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* CONTENT */
+.page{padding:13px;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:15px;margin-bottom:11px;box-shadow:var(--shadow)}
+.card-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:13px;display:flex;align-items:center;gap:6px}
+
+/* FORM */
+label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;margin-top:12px}
+label:first-child{margin-top:0}
+input,select{width:100%;background:var(--bg);border:2px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;outline:none;transition:border-color .2s,background .2s;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--hijau);background:#fff}
+input[type=number]{-moz-appearance:textfield}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:13px 18px;border-radius:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;border:none;transition:all .15s;width:100%;margin-top:11px}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.5;pointer-events:none}
+.btn-hijau{background:var(--hijau);color:#fff;box-shadow:0 4px 14px rgba(45,106,79,.3)}
+.btn-biru{background:var(--biru);color:#fff;box-shadow:0 4px 14px rgba(26,86,160,.25)}
+.btn-wa{background:#25d366;color:#fff;box-shadow:0 4px 14px rgba(37,211,102,.3)}
+.btn-outline{background:transparent;border:2px solid var(--border);color:var(--text)}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:11px 0}
+
+/* LOADING OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.overlay.show{display:flex}
+.spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay-msg{color:#fff;font-size:13px;font-weight:700}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--hijau);color:#fff;padding:10px 22px;border-radius:22px;font-size:12px;font-weight:800;z-index:999;transition:transform .3s;white-space:nowrap;box-shadow:0 6px 24px rgba(45,106,79,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--merah)}
+.toast.warn{background:var(--emas)}
+
+.empty{text-align:center;padding:26px 16px;color:var(--muted)}
+.empty-ico{font-size:42px;margin-bottom:9px;opacity:.35}
+.empty p{font-size:12px;font-weight:600;line-height:1.7}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="hdr">
+    <a href="index.html" class="hdr-back">←</a>
+    <div class="hdr-text"><h1>Bayaran</h1><p>Wallet &amp; Invoice Yuran</p></div>
+    <div class="hdr-right">
+      <div class="sync-badge"><div class="sync-dot" id="syncDot"></div><span id="syncLbl">—</span></div>
+      <div class="hdr-date" id="hdrDate"></div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- BAHAGIAN 1: TOP UP WALLET -->
+  <div class="card">
+    <div class="card-title">💰 Top Up Wallet</div>
+    <label>Pilih Keluarga</label>
+    <select id="tu-keluarga" onchange="onPilihKeluargaTopUp()"><option value="">-- Pilih Keluarga --</option></select>
+    <div id="tu-baki-box" style="display:none;margin-top:10px;border-radius:12px;padding:13px;border:1.5px solid var(--border)">
+      <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Baki Wallet Semasa</div>
+      <div id="tu-baki-amt" style="font-size:26px;font-weight:900;font-family:'JetBrains Mono',monospace"></div>
+    </div>
+    <label>Jumlah Bank In (RM)</label>
+    <input type="number" id="tu-jumlah" min="0" step="0.50" placeholder="Contoh: 50.00">
+    <button class="btn btn-biru" onclick="topUpWallet()">💰 Top Up Wallet</button>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- BAHAGIAN 2: INVOICE YURAN -->
+  <div class="card">
+    <div class="card-title">📋 Invoice Yuran</div>
+    <label>Pilih Keluarga</label>
+    <select id="b-keluarga" onchange="onPilihKeluargaBayaran()"><option value="">-- Pilih Keluarga --</option></select>
+    <div id="b-baki-box" style="display:none;margin-top:10px;border-radius:12px;padding:13px;border:1.5px solid var(--border)">
+      <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Baki Wallet Semasa</div>
+      <div id="b-baki-amt" style="font-size:26px;font-weight:900;font-family:'JetBrains Mono',monospace"></div>
+    </div>
+    <label>Pilih Bulan Yuran</label>
+    <input type="month" id="b-bulan" onchange="onPilihBulanBayaran()">
+
+    <!-- Amaran bulan dah ada rekod -->
+    <div id="b-dah-rekod" style="display:none;margin-top:10px;background:var(--merah-lt);border:1.5px solid var(--merah);border-radius:12px;padding:13px">
+      <div style="font-size:12px;font-weight:800;color:var(--merah)">⛔ Yuran bulan ini sudah direkod</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;font-weight:600">Sila pilih bulan lain.</div>
+    </div>
+
+    <!-- Breakdown yuran -->
+    <div id="b-yuran-box" style="display:none;margin-top:10px;background:var(--emas-lt);border:1.5px solid #f0c04a;border-radius:12px;padding:13px">
+      <div style="font-size:10px;font-weight:800;color:var(--emas);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📋 Yuran Bulan Ini</div>
+      <div id="b-yuran-detail" style="font-size:12px;font-weight:600;color:var(--text);line-height:2"></div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #f0c04a;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;font-weight:800;color:var(--emas)">Jumlah Yuran</span>
+        <span id="b-yuran-total" style="font-size:16px;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--emas)">RM0.00</span>
+      </div>
+    </div>
+
+    <!-- Preview baki selepas tolak -->
+    <div id="b-preview" style="display:none;margin-top:10px;border-radius:12px;padding:13px;border:1.5px solid var(--border);background:var(--bg)">
+      <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📊 Baki Selepas Tolak Yuran</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px">
+        <span style="color:var(--muted)">Baki wallet</span>
+        <span id="pv-baki-lama" style="font-family:'JetBrains Mono',monospace"></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:10px">
+        <span style="color:var(--merah)">− Yuran</span>
+        <span id="pv-yuran" style="font-family:'JetBrains Mono',monospace;color:var(--merah)"></span>
+      </div>
+      <div style="height:1px;background:var(--border);margin-bottom:10px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;font-weight:900">Baki Baru</span>
+        <span id="pv-baki-baru" style="font-size:20px;font-weight:900;font-family:'JetBrains Mono',monospace"></span>
+      </div>
+    </div>
+
+    <div id="b-btns" style="display:none">
+      <button class="btn btn-hijau" onclick="simpanTolakYuran()">💾 Simpan &amp; Tolak Yuran</button>
+      <button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <div class="overlay-msg" id="overlay-msg">Menyimpan...</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════
+   CONFIG
+════════════════════════════════ */
+function getScriptURL(){
+  const param=new URLSearchParams(window.location.search).get('url')
+  if(param){ localStorage.setItem('mgj_url',param); return param }
+  return localStorage.getItem('mgj_url')||''
+}
+let SCRIPT_URL=getScriptURL()
+
+let CACHE={keluarga:[],pelajar:[],rekod:[]}
+let _bBaki=0, _bYuran=0, _bDahRekod=false
+
+/* ════════════════════════════════
+   INDEXEDDB
+════════════════════════════════ */
+const DB_NAME='mgj_db', DB_VER=5
+let _db=null
+
+function openDB(){
+  if(_db) return Promise.resolve(_db)
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(DB_NAME,DB_VER)
+    req.onupgradeneeded=e=>{
+      const db=e.target.result
+      if(!db.objectStoreNames.contains('keluarga')) db.createObjectStore('keluarga',{keyPath:'uid'})
+      if(!db.objectStoreNames.contains('pelajar'))  db.createObjectStore('pelajar',{keyPath:'uid'})
+      if(!db.objectStoreNames.contains('rekod')){
+        const s=db.createObjectStore('rekod',{keyPath:'uid'})
+        s.createIndex('pelajarTarikh','_pt',{unique:true})
+        s.createIndex('tarikh','tarikh')
+      }
+      if(!db.objectStoreNames.contains('meta'))        db.createObjectStore('meta',{keyPath:'k'})
+      if(!db.objectStoreNames.contains('uid_log'))     db.createObjectStore('uid_log',{keyPath:'uid'})
+      if(!db.objectStoreNames.contains('tombstone'))   db.createObjectStore('tombstone',{keyPath:'uid'})
+      if(!db.objectStoreNames.contains('wallet'))      db.createObjectStore('wallet',{keyPath:'keluargaUid'})
+      if(!db.objectStoreNames.contains('bayaran_rekod')) db.createObjectStore('bayaran_rekod',{keyPath:'uid'})
+    }
+    req.onsuccess=e=>{ _db=e.target.result; res(_db) }
+    req.onerror=e=>rej(e.target.error)
+  })
+}
+
+function dbGet(store,key){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const req=db.transaction(store,'readonly').objectStore(store).get(key)
+    req.onsuccess=e=>res(e.target.result)
+    req.onerror=e=>rej(e.target.error)
+  }))
+}
+
+function dbGetAll(store){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const req=db.transaction(store,'readonly').objectStore(store).getAll()
+    req.onsuccess=e=>res(e.target.result||[])
+    req.onerror=e=>rej(e.target.error)
+  }))
+}
+
+function dbPut(store,obj){
+  return openDB().then(db=>new Promise((res,rej)=>{
+    const req=db.transaction(store,'readwrite').objectStore(store).put(obj)
+    req.onsuccess=e=>res(e.target.result)
+    req.onerror=e=>rej(e.target.error)
+  }))
+}
+
+/* ════════════════════════════════
+   HELPERS
+════════════════════════════════ */
+const fmtRM=n=>'RM'+parseFloat(n||0).toFixed(2)
+
+function fmtBulan(ym){
+  if(!ym) return '-'
+  const[y,m]=ym.split('-')
+  const b=['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember']
+  return b[+m-1]+' '+y
+}
+
+function toast(msg,type=''){
+  const t=document.getElementById('toast')
+  t.textContent=msg; t.className='toast show'+(type?' '+type:'')
+  clearTimeout(window._tt)
+  window._tt=setTimeout(()=>t.className='toast',2800)
+}
+
+function showOverlay(msg='Menyimpan...'){
+  document.getElementById('overlay-msg').textContent=msg
+  document.getElementById('overlay').classList.add('show')
+}
+function hideOverlay(){ document.getElementById('overlay').classList.remove('show') }
+
+function setSyncStatus(status){
+  const dot=document.getElementById('syncDot')
+  const lbl=document.getElementById('syncLbl')
+  if(status==='ok')   { dot.className='sync-dot ok';      lbl.textContent='Tersambung' }
+  if(status==='err')  { dot.className='sync-dot err';     lbl.textContent='Gagal' }
+  if(status==='load') { dot.className='sync-dot loading'; lbl.textContent='Memuatkan...' }
+  if(status==='none') { dot.className='sync-dot';         lbl.textContent='Tiada URL' }
+}
+
+async function api(body){
+  if(!SCRIPT_URL){ toast('Tiada URL Apps Script!','err'); throw new Error('No URL') }
+  const resp=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(body)})
+  const data=await resp.json()
+  if(!data.ok) throw new Error(data.msg||'Ralat')
+  return data
+}
+
+/* ════════════════════════════════
+   WALLET
+════════════════════════════════ */
+async function getWallet(keluargaUid){
+  const w=await dbGet('wallet',keluargaUid)
+  return w ? w.baki : 0
+}
+
+async function setWallet(keluargaUid,baki){
+  await dbPut('wallet',{keluargaUid,baki})
+  if(SCRIPT_URL){
+    try{ await api({action:'setWallet',keluargaUid,baki}) }
+    catch(e){ console.warn('Wallet sync gagal:',e) }
+  }
+}
+
+async function loadWalletFromSheets(){
+  if(!SCRIPT_URL) return
+  try{
+    const r=await api({action:'getWallet'})
+    await Promise.all((r.data||[]).map(w=>dbPut('wallet',w)))
+  }catch(e){ console.warn('loadWallet gagal:',e) }
+}
+
+async function loadBayaranRekodFromSheets(){
+  if(!SCRIPT_URL) return
+  try{
+    const r=await api({action:'getBayaranRekod'})
+    await Promise.all((r.data||[]).map(x=>dbPut('bayaran_rekod',x)))
+  }catch(e){ console.warn('loadBayaranRekod gagal:',e) }
+}
+
+/* ════════════════════════════════
+   LOAD DATA
+════════════════════════════════ */
+async function loadData(){
+  setSyncStatus('load')
+  try{
+    const[k,p,rekods]=await Promise.all([
+      dbGetAll('keluarga'),
+      dbGetAll('pelajar'),
+      dbGetAll('rekod')
+    ])
+    CACHE.keluarga=k; CACHE.pelajar=p; CACHE.rekod=rekods
+    populateDropdowns()
+    // Load wallet & bayaran_rekod dari Sheets di background
+    if(SCRIPT_URL){
+      await Promise.all([loadWalletFromSheets(), loadBayaranRekodFromSheets()])
+      setSyncStatus('ok')
+    } else {
+      setSyncStatus('none')
+    }
+  }catch(e){
+    setSyncStatus('err')
+    console.warn('loadData gagal:',e)
+  }
+}
+
+/* ════════════════════════════════
+   DROPDOWNS
+════════════════════════════════ */
+function populateDropdowns(){
+  ;['tu-keluarga','b-keluarga'].forEach(id=>{
+    const sel=document.getElementById(id)
+    const cur=sel.value
+    sel.innerHTML='<option value="">-- Pilih Keluarga --</option>'
+    CACHE.keluarga.forEach(k=>{
+      const o=document.createElement('option')
+      o.value=k.uid; o.textContent=k.nama
+      sel.appendChild(o)
+    })
+    if(cur) sel.value=cur
+  })
+}
+
+/* ════════════════════════════════
+   HELPER UI
+════════════════════════════════ */
+function showBakiBox(boxId,amtId,baki){
+  const box=document.getElementById(boxId)
+  const amt=document.getElementById(amtId)
+  amt.textContent=fmtRM(baki)
+  amt.style.color=baki<0?'var(--merah)':baki===0?'var(--muted)':'var(--hijau)'
+  box.style.background=baki<0?'var(--merah-lt)':baki===0?'var(--bg)':'var(--hijau-lt)'
+  box.style.borderColor=baki<0?'var(--merah)':baki===0?'var(--border)':'var(--hijau-lg)'
+  box.style.display='block'
+}
+
+function resetInvoiceUI(){
+  document.getElementById('b-baki-box').style.display='none'
+  document.getElementById('b-dah-rekod').style.display='none'
+  document.getElementById('b-yuran-box').style.display='none'
+  document.getElementById('b-preview').style.display='none'
+  document.getElementById('b-btns').style.display='none'
+  document.getElementById('b-btns').innerHTML=
+    '<button class="btn btn-hijau" onclick="simpanTolakYuran()">💾 Simpan &amp; Tolak Yuran</button>'+
+    '<button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>'
+  _bYuran=0; _bDahRekod=false
+}
+
+/* ════════════════════════════════
+   TOP UP WALLET
+════════════════════════════════ */
+async function onPilihKeluargaTopUp(){
+  const kUid=document.getElementById('tu-keluarga').value
+  document.getElementById('tu-baki-box').style.display='none'
+  if(!kUid) return
+  const baki=await getWallet(kUid)
+  showBakiBox('tu-baki-box','tu-baki-amt',baki)
+}
+
+async function topUpWallet(){
+  const kUid=document.getElementById('tu-keluarga').value
+  const jumlah=parseFloat(document.getElementById('tu-jumlah').value)||0
+  if(!kUid){ toast('Sila pilih keluarga!','err'); return }
+  if(jumlah<=0){ toast('Sila masukkan jumlah!','err'); return }
+  const baki=await getWallet(kUid)
+  const baru=baki+jumlah
+  showOverlay('Menyimpan top up...')
+  try{
+    await setWallet(kUid,baru)
+    showBakiBox('tu-baki-box','tu-baki-amt',baru)
+    document.getElementById('tu-jumlah').value=''
+    hideOverlay()
+    toast('✅ Wallet berjaya ditop up!')
+    // Refresh baki invoice jika keluarga sama
+    if(document.getElementById('b-keluarga').value===kUid){
+      _bBaki=baru
+      showBakiBox('b-baki-box','b-baki-amt',baru)
+      refreshPreview()
+    }
+  }catch(e){ hideOverlay(); toast('❌ Gagal: '+e.message,'err') }
+}
+
+/* ════════════════════════════════
+   INVOICE YURAN
+════════════════════════════════ */
+async function onPilihKeluargaBayaran(){
+  const kUid=document.getElementById('b-keluarga').value
+  resetInvoiceUI()
+  if(!kUid) return
+  _bBaki=await getWallet(kUid)
+  showBakiBox('b-baki-box','b-baki-amt',_bBaki)
+  onPilihBulanBayaran()
+}
+
+async function onPilihBulanBayaran(){
+  const kUid=document.getElementById('b-keluarga').value
+  const ym=document.getElementById('b-bulan').value
+  document.getElementById('b-dah-rekod').style.display='none'
+  document.getElementById('b-yuran-box').style.display='none'
+  document.getElementById('b-preview').style.display='none'
+  document.getElementById('b-btns').style.display='none'
+  _bYuran=0; _bDahRekod=false
+  if(!kUid||!ym) return
+
+  // Semak rekod bayaran sedia ada
+  const dahRekod=await dbGet('bayaran_rekod',kUid+'|'+ym)
+  if(dahRekod){
+    document.getElementById('b-dah-rekod').style.display='block'
+    _bDahRekod=true
+    return
+  }
+
+  // Kira yuran semua anak bulan ini
+  const anak=CACHE.pelajar.filter(p=>p.keluargaUid===kUid)
+  const rekods=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym&&anak.some(p=>p.uid===r.pelajarUid))
+  let detail='', total=0
+  anak.forEach(p=>{
+    const pr=rekods.filter(r=>r.pelajarUid===p.uid)
+    if(!pr.length) return
+    const jSesi=pr.reduce((a,r)=>a+(+r.sesi||0),0)
+    const jYuran=pr.reduce((a,r)=>a+(+r.yuran||0),0)
+    total+=jYuran
+    detail+='👦 '+p.nama+' — '+jSesi+' sesi · '+fmtRM(jYuran)+'<br>'
+  })
+  _bYuran=total
+  if(!total){
+    document.getElementById('b-yuran-detail').innerHTML='<span style="color:var(--muted);font-style:italic">Tiada rekod sesi bulan ini</span>'
+    document.getElementById('b-yuran-total').textContent='RM0.00'
+  } else {
+    document.getElementById('b-yuran-detail').innerHTML=detail
+    document.getElementById('b-yuran-total').textContent=fmtRM(total)
+  }
+  document.getElementById('b-yuran-box').style.display='block'
+  refreshPreview()
+  document.getElementById('b-btns').style.display='block'
+}
+
+function refreshPreview(){
+  const baruBaki=_bBaki-_bYuran
+  document.getElementById('pv-baki-lama').textContent=fmtRM(_bBaki)
+  document.getElementById('pv-yuran').textContent='−'+fmtRM(_bYuran)
+  const el=document.getElementById('pv-baki-baru')
+  el.textContent=fmtRM(baruBaki)
+  el.style.color=baruBaki<0?'var(--merah)':baruBaki===0?'var(--muted)':'var(--hijau)'
+  document.getElementById('b-preview').style.display='block'
+}
+
+async function simpanTolakYuran(){
+  const kUid=document.getElementById('b-keluarga').value
+  const ym=document.getElementById('b-bulan').value
+  if(!kUid){ toast('Sila pilih keluarga!','err'); return }
+  if(!ym){ toast('Sila pilih bulan!','err'); return }
+  if(_bDahRekod){ toast('Yuran bulan ini sudah direkod!','err'); return }
+  const baruBaki=_bBaki-_bYuran
+  showOverlay('Menyimpan...')
+  try{
+    await setWallet(kUid,baruBaki)
+    // Simpan rekod bayaran — cegah duplicate
+    await dbPut('bayaran_rekod',{uid:kUid+'|'+ym,keluargaUid:kUid,ym,yuran:_bYuran,ts:Date.now()})
+    if(SCRIPT_URL){
+      try{ await api({action:'setBayaranRekod',keluargaUid:kUid,ym,yuran:_bYuran}) }catch(e){}
+    }
+    _bBaki=baruBaki
+    showBakiBox('b-baki-box','b-baki-amt',baruBaki)
+    // Refresh top up jika keluarga sama
+    if(document.getElementById('tu-keluarga').value===kUid){
+      showBakiBox('tu-baki-box','tu-baki-amt',baruBaki)
+    }
+    _bDahRekod=true
+    document.getElementById('b-dah-rekod').style.display='block'
+    document.getElementById('b-yuran-box').style.display='none'
+    document.getElementById('b-preview').style.display='none'
+    document.getElementById('b-btns').innerHTML=
+      '<button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>'
+    document.getElementById('b-btns').style.display='block'
+    hideOverlay()
+    toast('✅ Yuran berjaya ditolak dari wallet!')
+  }catch(e){ hideOverlay(); toast('❌ Gagal: '+e.message,'err') }
+}
+
+function hantarInvoiceWA(){
+  const kUid=document.getElementById('b-keluarga').value
+  const ym=document.getElementById('b-bulan').value
+  if(!kUid||!ym){ toast('Sila pilih keluarga dan bulan!','err'); return }
+  const k=CACHE.keluarga.find(x=>x.uid===kUid)
+  if(!k){ toast('Keluarga tidak dijumpai!','err'); return }
+  const anak=CACHE.pelajar.filter(p=>p.keluargaUid===kUid)
+  const rekods=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym&&anak.some(p=>p.uid===r.pelajarUid))
+  const baruBaki=_bBaki-_bYuran
+  let msg='Allahumma solli ala Saidina Muhammad \u{1F339}\n\n'
+  msg+='Assalamualaikum w.b.t,\n\n'
+  msg+='Terima kasih *'+k.nama+'* atas pembayaran yuran mengaji bagi bulan *'+fmtBulan(ym)+'*.\n\n'
+  msg+='\u{1F4CB} *RINGKASAN YURAN*\n'+'─'.repeat(28)+'\n'
+  anak.forEach(p=>{
+    const pr=rekods.filter(r=>r.pelajarUid===p.uid)
+    if(!pr.length) return
+    const jSesi=pr.reduce((a,r)=>a+(+r.sesi||0),0)
+    const jYuran=pr.reduce((a,r)=>a+(+r.yuran||0),0)
+    msg+='\u{1F466} *'+p.nama.toUpperCase()+'*\n'
+    msg+='   '+jSesi+' sesi \u00D7 '+fmtRM(p.kadar)+' = '+fmtRM(jYuran)+'\n'
+  })
+  msg+='─'.repeat(28)+'\n'
+  msg+='\u{1F4B0} Jumlah Yuran: *'+fmtRM(_bYuran)+'*\n'
+  msg+='─'.repeat(28)+'\n'
+  if(baruBaki>=0){
+    msg+=baruBaki>0
+      ?'\u{1F49A} Baki Wallet: *'+fmtRM(baruBaki)+'*\n\nBayaran selesai. Terima kasih! \u{1F64F}'
+      :'\u2705 Yuran telah diselesaikan sepenuhnya. Terima kasih! \u{1F64F}'
+  } else {
+    msg+='\u26A0\uFE0F Baki Perlu Dibayar: *'+fmtRM(Math.abs(baruBaki))+'*\n\nMohon dijelaskan secepat mungkin. Terima kasih! \u{1F64F}'
+  }
+  const tel=k.tel.replace(/\D/g,'')
+  window.open('https://wa.me/'+(tel.startsWith('0')?'6'+tel:tel)+'?text='+encodeURIComponent(msg),'_blank')
+}
+
+/* ════════════════════════════════
+   INIT
+════════════════════════════════ */
+async function init(){
+  const now=new Date()
+  const hari=['Ahd','Isn','Sel','Rab','Kha','Jum','Sab']
+  const bulanPendek=['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis']
+  document.getElementById('hdrDate').innerHTML=hari[now.getDay()]+', '+now.getDate()+' '+bulanPendek[now.getMonth()]+' '+now.getFullYear()
+  // Set bulan semasa
+  const curYM=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')
+  document.getElementById('b-bulan').value=curYM
+  await loadData()
+}
+
+init()
+</script>
+</body>
+</html>

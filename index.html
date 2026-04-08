@@ -245,10 +245,10 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
   <button class="tab-btn active" onclick="showTab('papan')"    id="tab-papan">   <span>📊</span>Papan</button>
   <button class="tab-btn"        onclick="showTab('rekod')"    id="tab-rekod">   <span>✏️</span>Rekod</button>
   <button class="tab-btn"        onclick="showTab('keluarga')" id="tab-keluarga"><span>👨‍👩‍👧‍👦</span>Keluarga</button>
-  <button class="tab-btn"        onclick="showTab('sejarah')"  id="tab-sejarah"> <span>📜</span>Sejarah</button>
   <button class="tab-btn"        onclick="showTab('yuran')"    id="tab-yuran">   <span>💰</span>Yuran</button>
   <button class="tab-btn"        onclick="showTab('laporan')"  id="tab-laporan"> <span>📈</span>Laporan</button>
-  <button class="tab-btn"        onclick="showTab('bayaran')"  id="tab-bayaran"> <span>💳</span>Bayaran</button>
+  <a href="sejarah.html" class="tab-btn"><span>📜</span>Sejarah</a>
+  <a href="bayaran.html" class="tab-btn"><span>💳</span>Bayaran</a>
 </div>
 
 <!-- PAPAN -->
@@ -342,16 +342,6 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
   </div>
 </div>
 
-<!-- SEJARAH -->
-<div id="tc-sejarah" class="tab-content">
-  <div class="filter-bar">
-    <input type="date" id="f-tarikh" onchange="renderSejarah()">
-    <select id="f-pelajar" onchange="renderSejarah()"><option value="">Semua Pelajar</option></select>
-  </div>
-  <input type="month" id="f-bulan" onchange="renderSejarah()" style="margin-bottom:9px">
-  <div id="senarai-s"></div>
-</div>
-
 <!-- YURAN -->
 <div id="tc-yuran" class="tab-content">
   <div class="card">
@@ -383,64 +373,6 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
   </div>
 </div>
 
-
-<!-- BAYARAN -->
-<div id="tc-bayaran" class="tab-content">
-
-  <!-- BAHAGIAN 1: TOP UP WALLET -->
-  <div class="card">
-    <div class="card-title">💰 Top Up Wallet</div>
-    <label>Pilih Keluarga</label>
-    <select id="tu-keluarga" onchange="onPilihKeluargaTopUp()"><option value="">-- Pilih Keluarga --</option></select>
-    <div id="tu-baki-box" style="display:none;margin-top:10px;border-radius:12px;padding:13px;border:1.5px solid var(--border)">
-      <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Baki Wallet Semasa</div>
-      <div id="tu-baki-amt" style="font-size:26px;font-weight:900;font-family:'JetBrains Mono',monospace"></div>
-    </div>
-    <label>Jumlah Bank In (RM)</label>
-    <input type="number" id="tu-jumlah" min="0" step="0.50" placeholder="Contoh: 50.00">
-    <button class="btn btn-biru" onclick="topUpWallet()">💰 Top Up Wallet</button>
-  </div>
-
-  <!-- BAHAGIAN 2: INVOICE YURAN -->
-  <div class="card">
-    <div class="card-title">📋 Invoice Yuran</div>
-    <label>Pilih Keluarga</label>
-    <select id="b-keluarga" onchange="onPilihKeluargaBayaran()"><option value="">-- Pilih Keluarga --</option></select>
-    <div id="b-baki-box" style="display:none;margin-top:10px;border-radius:12px;padding:13px;border:1.5px solid var(--border)">
-      <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Baki Wallet Semasa</div>
-      <div id="b-baki-amt" style="font-size:26px;font-weight:900;font-family:'JetBrains Mono',monospace"></div>
-    </div>
-    <label>Pilih Bulan Yuran</label>
-    <input type="month" id="b-bulan" onchange="onPilihBulanBayaran()">
-    <!-- Amaran bulan dah ada rekod -->
-    <div id="b-dah-rekod" style="display:none;margin-top:10px;background:var(--merah-lt);border:1.5px solid var(--merah);border-radius:12px;padding:13px">
-      <div style="font-size:12px;font-weight:800;color:var(--merah)">⛔ Yuran bulan ini sudah direkod</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px;font-weight:600">Sila pilih bulan lain.</div>
-    </div>
-    <!-- Breakdown yuran -->
-    <div id="b-yuran-box" style="display:none;margin-top:10px;background:var(--emas-lt);border:1.5px solid #f0c04a;border-radius:12px;padding:13px">
-      <div style="font-size:10px;font-weight:800;color:var(--emas);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📋 Yuran Bulan Ini</div>
-      <div id="b-yuran-detail" style="font-size:12px;font-weight:600;color:var(--text);line-height:2"></div>
-      <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #f0c04a;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:800;color:var(--emas)">Jumlah Yuran</span>
-        <span id="b-yuran-total" style="font-size:16px;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--emas)">RM0.00</span>
-      </div>
-    </div>
-    <!-- Preview baki selepas tolak -->
-    <div id="b-preview" style="display:none;margin-top:10px;border-radius:12px;padding:13px;border:1.5px solid var(--border);background:var(--bg)">
-      <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📊 Baki Selepas Tolak Yuran</div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px"><span style="color:var(--muted)">Baki wallet</span><span id="pv-baki-lama" style="font-family:'JetBrains Mono',monospace"></span></div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:10px"><span style="color:var(--merah)">− Yuran</span><span id="pv-yuran" style="font-family:'JetBrains Mono',monospace;color:var(--merah)"></span></div>
-      <div style="height:1px;background:var(--border);margin-bottom:10px"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:900">Baki Baru</span><span id="pv-baki-baru" style="font-size:20px;font-weight:900;font-family:'JetBrains Mono',monospace"></span></div>
-    </div>
-    <div id="b-btns" style="display:none">
-      <button class="btn btn-hijau" onclick="simpanTolakYuran()">💾 Simpan &amp; Tolak Yuran</button>
-      <button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>
-    </div>
-  </div>
-
-</div>
 
 <!-- LOADING OVERLAY -->
 <div class="overlay" id="overlay">
@@ -802,7 +734,6 @@ async function syncFromSheets(force=false){
     await Promise.all(bulan12.map(ym=>setMeta('synced_'+ym,Date.now())))
     CACHE.keluarga=keluarga; CACHE.pelajar=pelajar
     await loadRekodFromDB()
-    loadWalletFromSheets()
     setSyncStatus('ok')
     renderPapan()
   }catch(e){
@@ -882,9 +813,6 @@ async function showTab(name){
   if(name==='papan')    renderPapan()
   if(name==='rekod')    { isikanDropPelajar('r-pelajar'); updatePreview() }
   if(name==='keluarga') renderKeluarga()
-  if(name==='sejarah')  { isikanDropPelajar('f-pelajar'); await renderSejarah() }
-  if(name==='yuran')    await renderYuran()
-  if(name==='bayaran') { populateBayaranKeluarga(); document.getElementById('b-bulan').value=curYM() }
 }
 
 /* ════════════════════════════════
@@ -1274,77 +1202,6 @@ async function simpanRekod(){
 }
 
 /* ════════════════════════════════
-   SEJARAH
-════════════════════════════════ */
-async function renderSejarah(){
-  const tDate=document.getElementById('f-tarikh').value
-  const tBulan=document.getElementById('f-bulan').value
-  const tPelajar=document.getElementById('f-pelajar').value
-  const el=document.getElementById('senarai-s')
-  const ymTarget = tBulan || (tDate?tDate.slice(0,7):curYM())
-  // Load dari Sheets kalau bulan ini belum ada dalam IDB
-  el.innerHTML='<div class="empty"><div class="empty-ico">⏳</div><p>Memuatkan rekod...</p></div>'
-  await loadRekodBulan(ymTarget)
-  await loadRekodFromDB()
-  let rekods=[...CACHE.rekod]
-  if(tDate)    rekods=rekods.filter(r=>r.tarikh===tDate)
-  else if(tBulan) rekods=rekods.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===tBulan)
-  if(tPelajar) rekods=rekods.filter(r=>r.pelajarUid===tPelajar)
-  rekods.sort((a,b)=>b.tarikh.localeCompare(a.tarikh)||b.simpanPada.localeCompare(a.simpanPada))
-  if(!rekods.length){ el.innerHTML='<div class="empty"><div class="empty-ico">📜</div><p>Tiada rekod ditemui</p></div>'; return }
-  const grp={}
-  rekods.forEach(r=>{ if(!grp[r.tarikh])grp[r.tarikh]=[]; grp[r.tarikh].push(r) })
-  el.innerHTML=Object.keys(grp).sort().reverse().map(d=>
-    '<div class="seksyen-lbl">📅 '+fmtTarikh(d)+'</div>'+
-    grp[d].map(r=>{
-      const k=CACHE.keluarga.find(x=>x.uid===r.keluargaUid)
-      return '<div class="rekod-item">'+
-        '<div class="rekod-top">'+
-          '<div><div class="rekod-nama">'+r.pelajarNama+'</div>'+
-          (k?'<div class="rekod-fam">👨‍👩‍👧‍👦 '+k.nama+'</div>':'')+
-          '<div class="rekod-meta">'+r.tarikh+'</div></div>'+
-          '<div style="display:flex;gap:5px;align-items:center">'+
-            '<span class="badge badge-sesi">'+r.sesi+' Sesi</span>'+
-            '<button class="btn btn-merah btn-xs" onclick="hapusRekod(\''+r.uid+'\')">🗑️</button>'+
-          '</div>'+
-        '</div>'+
-        '<div class="rekod-yuran">💰 '+fmtRM(r.yuran)+'</div>'+
-        (r.muka?'<div class="rekod-bkmk">🔖 m/s '+r.muka+(r.ayat?' · '+r.ayat:'')+(r.surah?' · '+r.surah:'')+'</div>':'')+
-        (r.catatan?'<div class="rekod-cat">📝 '+r.catatan+'</div>':'')+
-      '</div>'
-    }).join('')
-  ).join('')
-}
-
-async function hapusRekod(rUid){
-  if(!await customConfirm('Adakah anda pasti ingin memadam rekod ini?','🗑️ Padam Rekod','🗑️ Ya, Padam')) return
-  showOverlay('Memadam rekod...')
-  setSyncStatus('load')
-  try{
-    // Cari semua entry untuk pelajar+tarikh yang sama
-    const rHapus=CACHE.rekod.find(r=>r.uid===rUid)
-    const toDelete=rHapus
-      ? CACHE.rekod.filter(r=>r.pelajarUid===rHapus.pelajarUid&&r.tarikh===rHapus.tarikh)
-      : [{uid:rUid}]
-    // Log semua uid ke uid_log — supaya sync tak bawa balik
-    await Promise.all(toDelete.map(r=>logDeleteUid(r.uid)))
-    // Padam dari IDB
-    await Promise.all(toDelete.map(r=>dbDelete('rekod',r.uid)))
-    await loadRekodFromDB()
-    // Terus delete dari Sheets (fire and forget, retry via uid_log kalau gagal)
-    Promise.all(toDelete.map(r=>
-      api({action:'deleteRekod',uid:r.uid})
-        .then(()=>dbDelete('uid_log',r.uid))
-        .catch(e=>console.warn('Delete Sheets gagal, pending retry:',r.uid,e))
-    ))
-    renderSejarah()
-    setSyncStatus('ok')
-    toast('🗑️ Rekod dipadam','err')
-  }catch(e){ setSyncStatus('err'); toast('❌ '+e.message,'err') }
-  finally{ hideOverlay() }
-}
-
-/* ════════════════════════════════
    YURAN
 ════════════════════════════════ */
 async function renderYuran(){
@@ -1533,238 +1390,6 @@ function exportCSV(){
 }
 
 init()
-
-/* ════════════════════════════════
-   WALLET — Baki per keluarga
-════════════════════════════════ */
-async function getWallet(keluargaUid){
-  const w=await dbGet('wallet',keluargaUid)
-  return w ? w.baki : 0
-}
-
-async function setWallet(keluargaUid, baki){
-  await dbPut('wallet',{keluargaUid, baki})
-  // Sync ke Sheets
-  if(SCRIPT_URL){
-    try{ await api({action:'setWallet', keluargaUid, baki}) }
-    catch(e){ console.warn('Wallet sync gagal:',e) }
-  }
-}
-
-async function loadWalletFromSheets(){
-  if(!SCRIPT_URL) return
-  try{
-    const r=await api({action:'getWallet'})
-    const list=r.data||[]
-    await Promise.all(list.map(w=>dbPut('wallet',w)))
-  }catch(e){ console.warn('loadWallet gagal:',e) }
-}
-
-/* ════════════════════════════════
-   TAB BAYARAN — UI Logic
-════════════════════════════════ */
-let _bBaki=0, _bYuran=0, _bDahRekod=false
-
-function populateBayaranKeluarga(){
-  ;['tu-keluarga','b-keluarga'].forEach(id=>{
-    const sel=document.getElementById(id)
-    const cur=sel.value
-    sel.innerHTML='<option value="">-- Pilih Keluarga --</option>'
-    CACHE.keluarga.forEach(k=>{
-      const o=document.createElement('option')
-      o.value=k.uid; o.textContent=k.nama
-      sel.appendChild(o)
-    })
-    if(cur) sel.value=cur
-  })
-}
-
-/* ── TOP UP ── */
-async function onPilihKeluargaTopUp(){
-  const kUid=document.getElementById('tu-keluarga').value
-  const box=document.getElementById('tu-baki-box')
-  box.style.display='none'
-  if(!kUid) return
-  const baki=await getWallet(kUid)
-  showBakiBox('tu-baki-box','tu-baki-amt',baki)
-}
-
-async function topUpWallet(){
-  const kUid=document.getElementById('tu-keluarga').value
-  const jumlah=parseFloat(document.getElementById('tu-jumlah').value)||0
-  if(!kUid){ toast('Sila pilih keluarga!','err'); return }
-  if(jumlah<=0){ toast('Sila masukkan jumlah!','err'); return }
-  const baki=await getWallet(kUid)
-  const baru=baki+jumlah
-  showOverlay('Menyimpan top up...')
-  try{
-    await setWallet(kUid,baru)
-    showBakiBox('tu-baki-box','tu-baki-amt',baru)
-    document.getElementById('tu-jumlah').value=''
-    hideOverlay()
-    toast('✅ Wallet berjaya ditop up!')
-    // Refresh baki di bahagian invoice jika keluarga sama
-    if(document.getElementById('b-keluarga').value===kUid){
-      _bBaki=baru
-      showBakiBox('b-baki-box','b-baki-amt',baru)
-      refreshPreview()
-    }
-  }catch(e){ hideOverlay(); toast('❌ Gagal: '+e.message,'err') }
-}
-
-/* ── INVOICE YURAN ── */
-async function onPilihKeluargaBayaran(){
-  const kUid=document.getElementById('b-keluarga').value
-  resetInvoiceUI()
-  if(!kUid) return
-  _bBaki=await getWallet(kUid)
-  showBakiBox('b-baki-box','b-baki-amt',_bBaki)
-  onPilihBulanBayaran()
-}
-
-async function onPilihBulanBayaran(){
-  const kUid=document.getElementById('b-keluarga').value
-  const ym=document.getElementById('b-bulan').value
-  document.getElementById('b-dah-rekod').style.display='none'
-  document.getElementById('b-yuran-box').style.display='none'
-  document.getElementById('b-preview').style.display='none'
-  document.getElementById('b-btns').style.display='none'
-  _bYuran=0; _bDahRekod=false
-  if(!kUid||!ym) return
-
-  // Semak rekod bayaran yuran sedia ada untuk bulan ini
-  const dahRekod=await dbGet('bayaran_rekod', kUid+'|'+ym)
-  if(dahRekod){
-    document.getElementById('b-dah-rekod').style.display='block'
-    _bDahRekod=true
-    return
-  }
-
-  // Kira yuran
-  const anak=CACHE.pelajar.filter(p=>p.keluargaUid===kUid)
-  const rekods=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym&&anak.some(p=>p.uid===r.pelajarUid))
-  let detail='', total=0
-  anak.forEach(p=>{
-    const pr=rekods.filter(r=>r.pelajarUid===p.uid)
-    if(!pr.length) return
-    const jSesi=pr.reduce((a,r)=>a+(+r.sesi||0),0)
-    const jYuran=pr.reduce((a,r)=>a+(+r.yuran||0),0)
-    total+=jYuran
-    detail+='👦 '+p.nama+' — '+jSesi+' sesi · '+fmtRM(jYuran)+'<br>'
-  })
-  _bYuran=total
-  if(!total){
-    document.getElementById('b-yuran-detail').innerHTML='<span style="color:var(--muted);font-style:italic">Tiada rekod sesi bulan ini</span>'
-    document.getElementById('b-yuran-total').textContent='RM0.00'
-  } else {
-    document.getElementById('b-yuran-detail').innerHTML=detail
-    document.getElementById('b-yuran-total').textContent=fmtRM(total)
-  }
-  document.getElementById('b-yuran-box').style.display='block'
-  refreshPreview()
-  document.getElementById('b-btns').style.display='block'
-}
-
-function refreshPreview(){
-  const baruBaki=_bBaki-_bYuran
-  document.getElementById('pv-baki-lama').textContent=fmtRM(_bBaki)
-  document.getElementById('pv-yuran').textContent='−'+fmtRM(_bYuran)
-  const el=document.getElementById('pv-baki-baru')
-  el.textContent=fmtRM(baruBaki)
-  el.style.color=baruBaki<0?'var(--merah)':baruBaki===0?'var(--muted)':'var(--hijau)'
-  document.getElementById('b-preview').style.display='block'
-}
-
-async function simpanTolakYuran(){
-  const kUid=document.getElementById('b-keluarga').value
-  const ym=document.getElementById('b-bulan').value
-  if(!kUid){ toast('Sila pilih keluarga!','err'); return }
-  if(!ym){ toast('Sila pilih bulan!','err'); return }
-  if(_bDahRekod){ toast('Yuran bulan ini sudah direkod!','err'); return }
-  const baruBaki=_bBaki-_bYuran
-  showOverlay('Menyimpan...')
-  try{
-    await setWallet(kUid,baruBaki)
-    // Simpan rekod bayaran supaya tak boleh duplicate
-    await dbPut('bayaran_rekod',{uid:kUid+'|'+ym, keluargaUid:kUid, ym, yuran:_bYuran, ts:Date.now()})
-    if(SCRIPT_URL){
-      try{ await api({action:'setBayaranRekod', keluargaUid:kUid, ym, yuran:_bYuran}) }catch(e){}
-    }
-    _bBaki=baruBaki
-    showBakiBox('b-baki-box','b-baki-amt',baruBaki)
-    // Refresh baki top up jika keluarga sama
-    if(document.getElementById('tu-keluarga').value===kUid){
-      showBakiBox('tu-baki-box','tu-baki-amt',baruBaki)
-    }
-    // Mark bulan dah rekod — hide butang simpan, kekal butang WA
-    _bDahRekod=true
-    document.getElementById('b-dah-rekod').style.display='block'
-    document.getElementById('b-yuran-box').style.display='none'
-    document.getElementById('b-preview').style.display='none'
-    document.getElementById('b-btns').innerHTML=
-      '<button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>'
-    hideOverlay()
-    toast('✅ Yuran berjaya ditolak dari wallet!')
-  }catch(e){ hideOverlay(); toast('❌ Gagal: '+e.message,'err') }
-}
-
-function hantarInvoiceWA(){
-  const kUid=document.getElementById('b-keluarga').value
-  const ym=document.getElementById('b-bulan').value
-  if(!kUid||!ym){ toast('Sila pilih keluarga dan bulan!','err'); return }
-  const k=CACHE.keluarga.find(x=>x.uid===kUid)
-  if(!k){ toast('Keluarga tidak dijumpai!','err'); return }
-  const anak=CACHE.pelajar.filter(p=>p.keluargaUid===kUid)
-  const rekods=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym&&anak.some(p=>p.uid===r.pelajarUid))
-  const baruBaki=_bBaki-_bYuran
-  let msg='Allahumma solli ala Saidina Muhammad \u{1F339}\n\n'
-  msg+='Assalamualaikum w.b.t,\n\n'
-  msg+='Terima kasih *'+k.nama+'* atas pembayaran yuran mengaji bagi bulan *'+fmtBulan(ym)+'*.\n\n'
-  msg+='\u{1F4CB} *RINGKASAN YURAN*\n'+'─'.repeat(28)+'\n'
-  anak.forEach(p=>{
-    const pr=rekods.filter(r=>r.pelajarUid===p.uid)
-    if(!pr.length) return
-    const jSesi=pr.reduce((a,r)=>a+(+r.sesi||0),0)
-    const jYuran=pr.reduce((a,r)=>a+(+r.yuran||0),0)
-    msg+='\u{1F466} *'+p.nama.toUpperCase()+'*\n'
-    msg+='   '+jSesi+' sesi \u00D7 '+fmtRM(p.kadar)+' = '+fmtRM(jYuran)+'\n'
-  })
-  msg+='─'.repeat(28)+'\n'
-  msg+='\u{1F4B0} Jumlah Yuran: *'+fmtRM(_bYuran)+'*\n'
-  msg+='─'.repeat(28)+'\n'
-  if(baruBaki>=0){
-    msg+=baruBaki>0
-      ?'\u{1F49A} Baki Wallet: *'+fmtRM(baruBaki)+'*\n\nBayaran selesai. Terima kasih! \u{1F64F}'
-      :'\u{2705} Yuran telah diselesaikan sepenuhnya. Terima kasih! \u{1F64F}'
-  } else {
-    msg+='\u26A0\uFE0F Baki Perlu Dibayar: *'+fmtRM(Math.abs(baruBaki))+'*\n\nMohon dijelaskan secepat mungkin. Terima kasih! \u{1F64F}'
-  }
-  const tel=k.tel.replace(/\D/g,'')
-  window.open('https://wa.me/'+(tel.startsWith('0')?'6'+tel:tel)+'?text='+encodeURIComponent(msg),'_blank')
-}
-
-/* ── HELPERS ── */
-function showBakiBox(boxId, amtId, baki){
-  const box=document.getElementById(boxId)
-  const amt=document.getElementById(amtId)
-  amt.textContent=fmtRM(baki)
-  amt.style.color=baki<0?'var(--merah)':baki===0?'var(--muted)':'var(--hijau)'
-  box.style.background=baki<0?'var(--merah-lt)':baki===0?'var(--bg)':'var(--hijau-lt)'
-  box.style.borderColor=baki<0?'var(--merah)':baki===0?'var(--border)':'var(--hijau-lg)'
-  box.style.display='block'
-}
-
-function resetInvoiceUI(){
-  document.getElementById('b-baki-box').style.display='none'
-  document.getElementById('b-dah-rekod').style.display='none'
-  document.getElementById('b-yuran-box').style.display='none'
-  document.getElementById('b-preview').style.display='none'
-  document.getElementById('b-btns').style.display='none'
-  document.getElementById('b-btns').innerHTML=
-    '<button class="btn btn-hijau" onclick="simpanTolakYuran()">💾 Simpan &amp; Tolak Yuran</button>'+
-    '<button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>'
-  _bYuran=0; _bDahRekod=false
-}
 </script>
 </body>
 </html>
