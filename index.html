@@ -36,7 +36,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* TABS */
-.tab-nav{display:flex;background:var(--card);border-bottom:2px solid var(--border);overflow-x:auto;scrollbar-width:none;position:fixed;top:168px;left:0;right:0;z-index:100;box-shadow:var(--shadow)}
+.tab-nav{display:flex;background:var(--card);border-bottom:2px solid var(--border);overflow-x:auto;scrollbar-width:none;position:fixed;top:68px;left:0;right:0;z-index:100;box-shadow:var(--shadow)}
 .tab-nav::-webkit-scrollbar{display:none}
 .tab-btn{flex:1;min-width:58px;padding:9px 3px 8px;background:none;border:none;color:var(--muted);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap}
 .tab-btn.active{color:var(--hijau);border-bottom-color:var(--hijau)}
@@ -386,36 +386,60 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
 
 <!-- BAYARAN -->
 <div id="tc-bayaran" class="tab-content">
+
+  <!-- BAHAGIAN 1: TOP UP WALLET -->
   <div class="card">
-    <div class="card-title">💳 Rekod Bayaran Yuran</div>
+    <div class="card-title">💰 Top Up Wallet</div>
+    <label>Pilih Keluarga</label>
+    <select id="tu-keluarga" onchange="onPilihKeluargaTopUp()"><option value="">-- Pilih Keluarga --</option></select>
+    <div id="tu-baki-box" style="display:none;margin-top:10px;border-radius:12px;padding:13px;border:1.5px solid var(--border)">
+      <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Baki Wallet Semasa</div>
+      <div id="tu-baki-amt" style="font-size:26px;font-weight:900;font-family:'JetBrains Mono',monospace"></div>
+    </div>
+    <label>Jumlah Bank In (RM)</label>
+    <input type="number" id="tu-jumlah" min="0" step="0.50" placeholder="Contoh: 50.00">
+    <button class="btn btn-biru" onclick="topUpWallet()">💰 Top Up Wallet</button>
+  </div>
+
+  <!-- BAHAGIAN 2: INVOICE YURAN -->
+  <div class="card">
+    <div class="card-title">📋 Invoice Yuran</div>
     <label>Pilih Keluarga</label>
     <select id="b-keluarga" onchange="onPilihKeluargaBayaran()"><option value="">-- Pilih Keluarga --</option></select>
     <div id="b-baki-box" style="display:none;margin-top:10px;border-radius:12px;padding:13px;border:1.5px solid var(--border)">
       <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Baki Wallet Semasa</div>
-      <div id="b-baki-amt" style="font-size:26px;font-weight:900;font-family:JetBrainsMono,monospace"></div>
+      <div id="b-baki-amt" style="font-size:26px;font-weight:900;font-family:'JetBrains Mono',monospace"></div>
     </div>
     <label>Pilih Bulan Yuran</label>
     <input type="month" id="b-bulan" onchange="onPilihBulanBayaran()">
+    <!-- Amaran bulan dah ada rekod -->
+    <div id="b-dah-rekod" style="display:none;margin-top:10px;background:var(--merah-lt);border:1.5px solid var(--merah);border-radius:12px;padding:13px">
+      <div style="font-size:12px;font-weight:800;color:var(--merah)">⛔ Yuran bulan ini sudah direkod</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;font-weight:600">Sila pilih bulan lain.</div>
+    </div>
+    <!-- Breakdown yuran -->
     <div id="b-yuran-box" style="display:none;margin-top:10px;background:var(--emas-lt);border:1.5px solid #f0c04a;border-radius:12px;padding:13px">
       <div style="font-size:10px;font-weight:800;color:var(--emas);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📋 Yuran Bulan Ini</div>
       <div id="b-yuran-detail" style="font-size:12px;font-weight:600;color:var(--text);line-height:2"></div>
       <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #f0c04a;display:flex;justify-content:space-between;align-items:center">
         <span style="font-size:12px;font-weight:800;color:var(--emas)">Jumlah Yuran</span>
-        <span id="b-yuran-total" style="font-size:16px;font-weight:900;font-family:JetBrainsMono,monospace;color:var(--emas)">RM0.00</span>
+        <span id="b-yuran-total" style="font-size:16px;font-weight:900;font-family:'JetBrains Mono',monospace;color:var(--emas)">RM0.00</span>
       </div>
     </div>
-    <label>Jumlah Bayaran Diterima (RM)</label>
-    <input type="number" id="b-bayaran" min="0" step="0.50" placeholder="Contoh: 50" oninput="onInputBayaran()">
+    <!-- Preview baki selepas tolak -->
     <div id="b-preview" style="display:none;margin-top:10px;border-radius:12px;padding:13px;border:1.5px solid var(--border);background:var(--bg)">
-      <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📊 Pengiraan</div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px"><span style="color:var(--muted)">Baki lama</span><span id="pv-baki-lama" style="font-family:JetBrainsMono,monospace"></span></div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px"><span style="color:var(--hijau)">+ Bayaran</span><span id="pv-bayaran" style="font-family:JetBrainsMono,monospace;color:var(--hijau)"></span></div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:10px"><span style="color:var(--merah)">− Yuran</span><span id="pv-yuran" style="font-family:JetBrainsMono,monospace;color:var(--merah)"></span></div>
+      <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📊 Baki Selepas Tolak Yuran</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:6px"><span style="color:var(--muted)">Baki wallet</span><span id="pv-baki-lama" style="font-family:'JetBrains Mono',monospace"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:10px"><span style="color:var(--merah)">− Yuran</span><span id="pv-yuran" style="font-family:'JetBrains Mono',monospace;color:var(--merah)"></span></div>
       <div style="height:1px;background:var(--border);margin-bottom:10px"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:900">Baki Baru</span><span id="pv-baki-baru" style="font-size:20px;font-weight:900;font-family:JetBrainsMono,monospace"></span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:900">Baki Baru</span><span id="pv-baki-baru" style="font-size:20px;font-weight:900;font-family:'JetBrains Mono',monospace"></span></div>
     </div>
-    <button class="btn btn-hijau" id="btn-bayaran" onclick="simpanBayaran()" style="display:none">💾 Simpan & WhatsApp</button>
+    <div id="b-btns" style="display:none">
+      <button class="btn btn-hijau" onclick="simpanTolakYuran()">💾 Simpan &amp; Tolak Yuran</button>
+      <button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>
+    </div>
   </div>
+
 </div>
 
 <!-- LOADING OVERLAY -->
@@ -485,7 +509,7 @@ function normTarikh(r){
 /* ════════════════════════════════
    INDEXEDDB — Primary storage
 ════════════════════════════════ */
-const DB_NAME='mgj_db', DB_VER=4
+const DB_NAME='mgj_db', DB_VER=5
 let _db=null
 
 function openDB(){
@@ -508,6 +532,7 @@ function openDB(){
       // Ini yang cegah rekod muncul balik masa sync walaupun uid_log dah kosong
       if(!db.objectStoreNames.contains('tombstone')) db.createObjectStore('tombstone',{keyPath:'uid'})
       if(!db.objectStoreNames.contains('wallet'))    db.createObjectStore('wallet',{keyPath:'keluargaUid'})
+      if(!db.objectStoreNames.contains('bayaran_rekod')) db.createObjectStore('bayaran_rekod',{keyPath:'uid'})
     }
     req.onsuccess=e=>{ _db=e.target.result; res(_db) }
     req.onerror=e=>rej(e.target.error)
@@ -1538,50 +1563,84 @@ async function loadWalletFromSheets(){
 /* ════════════════════════════════
    TAB BAYARAN — UI Logic
 ════════════════════════════════ */
-let _bBaki=0, _bYuran=0
+let _bBaki=0, _bYuran=0, _bDahRekod=false
 
 function populateBayaranKeluarga(){
-  const sel=document.getElementById('b-keluarga')
-  const cur=sel.value
-  sel.innerHTML='<option value="">-- Pilih Keluarga --</option>'
-  CACHE.keluarga.forEach(k=>{
-    const o=document.createElement('option')
-    o.value=k.uid; o.textContent=k.nama
-    sel.appendChild(o)
+  ;['tu-keluarga','b-keluarga'].forEach(id=>{
+    const sel=document.getElementById(id)
+    const cur=sel.value
+    sel.innerHTML='<option value="">-- Pilih Keluarga --</option>'
+    CACHE.keluarga.forEach(k=>{
+      const o=document.createElement('option')
+      o.value=k.uid; o.textContent=k.nama
+      sel.appendChild(o)
+    })
+    if(cur) sel.value=cur
   })
-  if(cur) sel.value=cur
 }
 
+/* ── TOP UP ── */
+async function onPilihKeluargaTopUp(){
+  const kUid=document.getElementById('tu-keluarga').value
+  const box=document.getElementById('tu-baki-box')
+  box.style.display='none'
+  if(!kUid) return
+  const baki=await getWallet(kUid)
+  showBakiBox('tu-baki-box','tu-baki-amt',baki)
+}
+
+async function topUpWallet(){
+  const kUid=document.getElementById('tu-keluarga').value
+  const jumlah=parseFloat(document.getElementById('tu-jumlah').value)||0
+  if(!kUid){ toast('Sila pilih keluarga!','err'); return }
+  if(jumlah<=0){ toast('Sila masukkan jumlah!','err'); return }
+  const baki=await getWallet(kUid)
+  const baru=baki+jumlah
+  showOverlay('Menyimpan top up...')
+  try{
+    await setWallet(kUid,baru)
+    showBakiBox('tu-baki-box','tu-baki-amt',baru)
+    document.getElementById('tu-jumlah').value=''
+    hideOverlay()
+    toast('✅ Wallet berjaya ditop up!')
+    // Refresh baki di bahagian invoice jika keluarga sama
+    if(document.getElementById('b-keluarga').value===kUid){
+      _bBaki=baru
+      showBakiBox('b-baki-box','b-baki-amt',baru)
+      refreshPreview()
+    }
+  }catch(e){ hideOverlay(); toast('❌ Gagal: '+e.message,'err') }
+}
+
+/* ── INVOICE YURAN ── */
 async function onPilihKeluargaBayaran(){
   const kUid=document.getElementById('b-keluarga').value
-  document.getElementById('b-baki-box').style.display='none'
-  document.getElementById('b-yuran-box').style.display='none'
-  document.getElementById('b-preview').style.display='none'
-  document.getElementById('btn-bayaran').style.display='none'
-  document.getElementById('b-bayaran').value=''
-  _bYuran=0
+  resetInvoiceUI()
   if(!kUid) return
   _bBaki=await getWallet(kUid)
-  const bBox=document.getElementById('b-baki-box')
-  const bAmt=document.getElementById('b-baki-amt')
-  bAmt.textContent=fmtRM(_bBaki)
-  bAmt.style.color=_bBaki<0?'var(--merah)':_bBaki===0?'var(--muted)':'var(--hijau)'
-  bBox.style.background=_bBaki<0?'var(--merah-lt)':_bBaki===0?'var(--bg)':'var(--hijau-lt)'
-  bBox.style.borderColor=_bBaki<0?'var(--merah)':_bBaki===0?'var(--border)':'var(--hijau-lg)'
-  bBox.style.display='block'
-  // Auto refresh bulan
+  showBakiBox('b-baki-box','b-baki-amt',_bBaki)
   onPilihBulanBayaran()
 }
 
 async function onPilihBulanBayaran(){
   const kUid=document.getElementById('b-keluarga').value
   const ym=document.getElementById('b-bulan').value
+  document.getElementById('b-dah-rekod').style.display='none'
   document.getElementById('b-yuran-box').style.display='none'
   document.getElementById('b-preview').style.display='none'
-  document.getElementById('btn-bayaran').style.display='none'
-  _bYuran=0
+  document.getElementById('b-btns').style.display='none'
+  _bYuran=0; _bDahRekod=false
   if(!kUid||!ym) return
-  // Kira yuran semua anak keluarga ini dalam bulan dipilih
+
+  // Semak rekod bayaran yuran sedia ada untuk bulan ini
+  const dahRekod=await dbGet('bayaran_rekod', kUid+'|'+ym)
+  if(dahRekod){
+    document.getElementById('b-dah-rekod').style.display='block'
+    _bDahRekod=true
+    return
+  }
+
+  // Kira yuran
   const anak=CACHE.pelajar.filter(p=>p.keluargaUid===kUid)
   const rekods=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym&&anak.some(p=>p.uid===r.pelajarUid))
   let detail='', total=0
@@ -1602,84 +1661,109 @@ async function onPilihBulanBayaran(){
     document.getElementById('b-yuran-total').textContent=fmtRM(total)
   }
   document.getElementById('b-yuran-box').style.display='block'
-  onInputBayaran()
+  refreshPreview()
+  document.getElementById('b-btns').style.display='block'
 }
 
-function onInputBayaran(){
-  const kUid=document.getElementById('b-keluarga').value
-  const bayaran=parseFloat(document.getElementById('b-bayaran').value)||0
-  const pv=document.getElementById('b-preview')
-  const btn=document.getElementById('btn-bayaran')
-  if(!kUid){ pv.style.display='none'; btn.style.display='none'; return }
-  const baruBaki=_bBaki+bayaran-_bYuran
+function refreshPreview(){
+  const baruBaki=_bBaki-_bYuran
   document.getElementById('pv-baki-lama').textContent=fmtRM(_bBaki)
-  document.getElementById('pv-bayaran').textContent='+'+fmtRM(bayaran)
   document.getElementById('pv-yuran').textContent='−'+fmtRM(_bYuran)
-  const bakiEl=document.getElementById('pv-baki-baru')
-  bakiEl.textContent=fmtRM(baruBaki)
-  bakiEl.style.color=baruBaki<0?'var(--merah)':baruBaki===0?'var(--muted)':'var(--hijau)'
-  pv.style.display='block'
-  btn.style.display='flex'
+  const el=document.getElementById('pv-baki-baru')
+  el.textContent=fmtRM(baruBaki)
+  el.style.color=baruBaki<0?'var(--merah)':baruBaki===0?'var(--muted)':'var(--hijau)'
+  document.getElementById('b-preview').style.display='block'
 }
 
-async function simpanBayaran(){
+async function simpanTolakYuran(){
   const kUid=document.getElementById('b-keluarga').value
   const ym=document.getElementById('b-bulan').value
-  const bayaran=parseFloat(document.getElementById('b-bayaran').value)||0
   if(!kUid){ toast('Sila pilih keluarga!','err'); return }
   if(!ym){ toast('Sila pilih bulan!','err'); return }
-  const k=CACHE.keluarga.find(x=>x.uid===kUid)
-  if(!k){ toast('Keluarga tidak dijumpai!','err'); return }
-  const baruBaki=_bBaki+bayaran-_bYuran
-  showOverlay('Menyimpan bayaran...')
+  if(_bDahRekod){ toast('Yuran bulan ini sudah direkod!','err'); return }
+  const baruBaki=_bBaki-_bYuran
+  showOverlay('Menyimpan...')
   try{
-    await setWallet(kUid, baruBaki)
+    await setWallet(kUid,baruBaki)
+    // Simpan rekod bayaran supaya tak boleh duplicate
+    await dbPut('bayaran_rekod',{uid:kUid+'|'+ym, keluargaUid:kUid, ym, yuran:_bYuran, ts:Date.now()})
+    if(SCRIPT_URL){
+      try{ await api({action:'setBayaranRekod', keluargaUid:kUid, ym, yuran:_bYuran}) }catch(e){}
+    }
     _bBaki=baruBaki
-    // Update display baki
-    const bAmt=document.getElementById('b-baki-amt')
-    bAmt.textContent=fmtRM(baruBaki)
-    bAmt.style.color=baruBaki<0?'var(--merah)':baruBaki===0?'var(--muted)':'var(--hijau)'
-    const bBox=document.getElementById('b-baki-box')
-    bBox.style.background=baruBaki<0?'var(--merah-lt)':baruBaki===0?'var(--bg)':'var(--hijau-lt)'
-    bBox.style.borderColor=baruBaki<0?'var(--merah)':baruBaki===0?'var(--border)':'var(--hijau-lg)'
+    showBakiBox('b-baki-box','b-baki-amt',baruBaki)
+    // Refresh baki top up jika keluarga sama
+    if(document.getElementById('tu-keluarga').value===kUid){
+      showBakiBox('tu-baki-box','tu-baki-amt',baruBaki)
+    }
+    // Mark bulan dah rekod — hide butang simpan, kekal butang WA
+    _bDahRekod=true
+    document.getElementById('b-dah-rekod').style.display='block'
+    document.getElementById('b-yuran-box').style.display='none'
+    document.getElementById('b-preview').style.display='none'
+    document.getElementById('b-btns').innerHTML=
+      '<button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>'
     hideOverlay()
-    toast('✅ Bayaran disimpan!')
-    // Hantar WhatsApp
-    hantarWABayaran(k, ym, bayaran, _bYuran, baruBaki)
-  }catch(e){
-    hideOverlay()
-    toast('❌ Gagal simpan: '+e.message,'err')
-  }
+    toast('✅ Yuran berjaya ditolak dari wallet!')
+  }catch(e){ hideOverlay(); toast('❌ Gagal: '+e.message,'err') }
 }
 
-function hantarWABayaran(k, ym, bayaran, yuran, baruBaki){
-  const anak=CACHE.pelajar.filter(p=>p.keluargaUid===k.uid)
+function hantarInvoiceWA(){
+  const kUid=document.getElementById('b-keluarga').value
+  const ym=document.getElementById('b-bulan').value
+  if(!kUid||!ym){ toast('Sila pilih keluarga dan bulan!','err'); return }
+  const k=CACHE.keluarga.find(x=>x.uid===kUid)
+  if(!k){ toast('Keluarga tidak dijumpai!','err'); return }
+  const anak=CACHE.pelajar.filter(p=>p.keluargaUid===kUid)
   const rekods=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym&&anak.some(p=>p.uid===r.pelajarUid))
-  let msg='Allahumma solli ala Saidina Muhammad 🌹\n'
-  msg+='Assalamualaikum w.b.t,\n'
+  const baruBaki=_bBaki-_bYuran
+  let msg='Allahumma solli ala Saidina Muhammad \u{1F339}\n\n'
+  msg+='Assalamualaikum w.b.t,\n\n'
   msg+='Terima kasih *'+k.nama+'* atas pembayaran yuran mengaji bagi bulan *'+fmtBulan(ym)+'*.\n\n'
-  msg+='📋 *RINGKASAN YURAN*\n'+'─'.repeat(28)+'\n'
+  msg+='\u{1F4CB} *RINGKASAN YURAN*\n'+'─'.repeat(28)+'\n'
   anak.forEach(p=>{
     const pr=rekods.filter(r=>r.pelajarUid===p.uid)
     if(!pr.length) return
     const jSesi=pr.reduce((a,r)=>a+(+r.sesi||0),0)
     const jYuran=pr.reduce((a,r)=>a+(+r.yuran||0),0)
-    msg+='👦 *'+p.nama.toUpperCase()+'*\n'
-    msg+='   '+jSesi+' sesi × '+fmtRM(p.kadar)+' = '+fmtRM(jYuran)+'\n'
+    msg+='\u{1F466} *'+p.nama.toUpperCase()+'*\n'
+    msg+='   '+jSesi+' sesi \u00D7 '+fmtRM(p.kadar)+' = '+fmtRM(jYuran)+'\n'
   })
   msg+='─'.repeat(28)+'\n'
-  msg+='💰 Jumlah Yuran: *'+fmtRM(yuran)+'*\n'
-  if(bayaran>0) msg+='✅ Bayaran Diterima: *'+fmtRM(bayaran)+'*\n'
+  msg+='\u{1F4B0} Jumlah Yuran: *'+fmtRM(_bYuran)+'*\n'
   msg+='─'.repeat(28)+'\n'
   if(baruBaki>=0){
     msg+=baruBaki>0
-      ?'💚 Baki Wallet: *'+fmtRM(baruBaki)+'*\n\nBayaran selesai. Terima kasih! 🙏'
-      :'✅ Yuran telah diselesaikan sepenuhnya. Terima kasih! 🙏'
+      ?'\u{1F49A} Baki Wallet: *'+fmtRM(baruBaki)+'*\n\nBayaran selesai. Terima kasih! \u{1F64F}'
+      :'\u{2705} Yuran telah diselesaikan sepenuhnya. Terima kasih! \u{1F64F}'
   } else {
-    msg+='Terima kasih! 🙏'
+    msg+='\u26A0\uFE0F Baki Perlu Dibayar: *'+fmtRM(Math.abs(baruBaki))+'*\n\nMohon dijelaskan secepat mungkin. Terima kasih! \u{1F64F}'
   }
   const tel=k.tel.replace(/\D/g,'')
   window.open('https://wa.me/'+(tel.startsWith('0')?'6'+tel:tel)+'?text='+encodeURIComponent(msg),'_blank')
+}
+
+/* ── HELPERS ── */
+function showBakiBox(boxId, amtId, baki){
+  const box=document.getElementById(boxId)
+  const amt=document.getElementById(amtId)
+  amt.textContent=fmtRM(baki)
+  amt.style.color=baki<0?'var(--merah)':baki===0?'var(--muted)':'var(--hijau)'
+  box.style.background=baki<0?'var(--merah-lt)':baki===0?'var(--bg)':'var(--hijau-lt)'
+  box.style.borderColor=baki<0?'var(--merah)':baki===0?'var(--border)':'var(--hijau-lg)'
+  box.style.display='block'
+}
+
+function resetInvoiceUI(){
+  document.getElementById('b-baki-box').style.display='none'
+  document.getElementById('b-dah-rekod').style.display='none'
+  document.getElementById('b-yuran-box').style.display='none'
+  document.getElementById('b-preview').style.display='none'
+  document.getElementById('b-btns').style.display='none'
+  document.getElementById('b-btns').innerHTML=
+    '<button class="btn btn-hijau" onclick="simpanTolakYuran()">💾 Simpan &amp; Tolak Yuran</button>'+
+    '<button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>'
+  _bYuran=0; _bDahRekod=false
 }
 </script>
 </body>
