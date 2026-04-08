@@ -1655,8 +1655,8 @@ async function simpanBayaran(){
 function hantarWABayaran(k, ym, bayaran, yuran, baruBaki){
   const anak=CACHE.pelajar.filter(p=>p.keluargaUid===k.uid)
   const rekods=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym&&anak.some(p=>p.uid===r.pelajarUid))
-  let msg='Allahumma solli ala Saidina Muhammad 🌹\n\n'
-  msg+='Assalamualaikum w.b.t,\n\n'
+  let msg='Allahumma solli ala Saidina Muhammad 🌹\n'
+  msg+='Assalamualaikum w.b.t,\n'
   msg+='Terima kasih *'+k.nama+'* atas pembayaran yuran mengaji bagi bulan *'+fmtBulan(ym)+'*.\n\n'
   msg+='📋 *RINGKASAN YURAN*\n'+'─'.repeat(28)+'\n'
   anak.forEach(p=>{
@@ -1676,7 +1676,7 @@ function hantarWABayaran(k, ym, bayaran, yuran, baruBaki){
       ?'💚 Baki Wallet: *'+fmtRM(baruBaki)+'*\n\nBayaran selesai. Terima kasih! 🙏'
       :'✅ Yuran telah diselesaikan sepenuhnya. Terima kasih! 🙏'
   } else {
-    msg+='⚠️ Baki Perlu Dibayar: *'+fmtRM(Math.abs(baruBaki))+'*\n\nMohon dijelaskan secepat mungkin. Terima kasih! 🙏'
+    msg+='Terima kasih! 🙏'
   }
   const tel=k.tel.replace(/\D/g,'')
   window.open('https://wa.me/'+(tel.startsWith('0')?'6'+tel:tel)+'?text='+encodeURIComponent(msg),'_blank')
