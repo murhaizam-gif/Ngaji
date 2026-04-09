@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Bayaran — Kelas Mengaji 1.1</title>
+<title>Bayaran — Kelas Mengaji</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
 
@@ -85,7 +85,7 @@ input[type=number]{-moz-appearance:textfield}
 <div class="header">
   <div class="hdr">
     <a href="index.html" class="hdr-back">←</a>
-    <div class="hdr-text"><h1>Bayaran v1.1</h1><p>Wallet &amp; Invoice Yuran</p></div>
+    <div class="hdr-text"><h1>Bayaran</h1><p>Wallet &amp; Invoice Yuran</p></div>
     <div class="hdr-right">
       <div class="sync-badge"><div class="sync-dot" id="syncDot"></div><span id="syncLbl">—</span></div>
       <div class="hdr-date" id="hdrDate"></div>
@@ -444,6 +444,10 @@ async function onPilihBulanBayaran(){
   if(dahRekod){
     document.getElementById('b-dah-rekod').style.display='block'
     _bDahRekod=true
+    _bYuran=dahRekod.yuran
+    document.getElementById('b-btns').innerHTML=
+      '<button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>'
+    document.getElementById('b-btns').style.display='block'
     return
   }
 
