@@ -555,10 +555,10 @@ function hantarInvoiceWA(){
   const anak=CACHE.pelajar.filter(p=>p.keluargaUid===kUid)
   const rekods=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym&&anak.some(p=>p.uid===r.pelajarUid))
   const baruBaki=_bBakiSelepas!==null ? _bBakiSelepas : _bBaki-_bYuran
-  let msg='Allahumma solli ala Saidina Muhammad \u{1F339}\n\n'
-  msg+='Assalamualaikum w.b.t,\n\n'
+  let msg='Allahumma solli ala Saidina Muhammad \n'
+  msg+='Assalamualaikum w.b.t,\n'
   msg+='Terima kasih *'+k.nama+'* atas pembayaran yuran mengaji bagi bulan *'+fmtBulan(ym)+'*.\n\n'
-  msg+='\u{1F4CB} *RINGKASAN YURAN*\n'+'─'.repeat(28)+'\n'
+  msg+='\u{1F4CB} *RINGKASAN YURAN*\n'+'─'.repeat(15)+'\n'
   anak.forEach(p=>{
     const pr=rekods.filter(r=>r.pelajarUid===p.uid)
     if(!pr.length) return
@@ -567,9 +567,9 @@ function hantarInvoiceWA(){
     msg+='\u{1F466} *'+p.nama.toUpperCase()+'*\n'
     msg+='   '+jSesi+' sesi \u00D7 '+fmtRM(p.kadar)+' = '+fmtRM(jYuran)+'\n'
   })
-  msg+='─'.repeat(28)+'\n'
+  msg+='─'.repeat(15)+'\n'
   msg+='\u{1F4B0} Jumlah Yuran: *'+fmtRM(_bYuran)+'*\n'
-  msg+='─'.repeat(28)+'\n'
+  msg+='─'.repeat(15)+'\n'
   if(baruBaki>=0){
     msg+=baruBaki>0
       ?'\u{1F49A} Baki Terlebih Bayar: *'+fmtRM(baruBaki)+'*\n\nBayaran selesai. Terima kasih! \u{1F64F}'
