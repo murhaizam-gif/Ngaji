@@ -85,7 +85,7 @@ input[type=number]{-moz-appearance:textfield}
 <div class="header">
   <div class="hdr">
     <a href="index.html" class="hdr-back">←</a>
-    <div class="hdr-text"><h1>Bayaran1.2</h1><p>Wallet &amp; Invoice Yuran</p></div>
+    <div class="hdr-text"><h1>Bayaran</h1><p>Wallet &amp; Invoice Yuran</p></div>
     <div class="hdr-right">
       <div class="sync-badge"><div class="sync-dot" id="syncDot"></div><span id="syncLbl">—</span></div>
       <div class="hdr-date" id="hdrDate"></div>
@@ -185,7 +185,7 @@ function getScriptURL(){
 let SCRIPT_URL=getScriptURL()
 
 let CACHE={keluarga:[],pelajar:[],rekod:[]}
-let _bBaki=0, _bYuran=0, _bDahRekod=false
+let _bBaki=0, _bYuran=0, _bDahRekod=false, _bBakiSelepas=null
 
 /* ════════════════════════════════
    INDEXEDDB
@@ -380,7 +380,7 @@ function resetInvoiceUI(){
   document.getElementById('b-btns').innerHTML=
     '<button class="btn btn-hijau" onclick="simpanTolakYuran()">💾 Simpan &amp; Tolak Yuran</button>'+
     '<button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>'
-  _bYuran=0; _bDahRekod=false
+  _bYuran=0; _bDahRekod=false; _bBakiSelepas=null
 }
 
 /* ════════════════════════════════
@@ -436,7 +436,7 @@ async function onPilihBulanBayaran(){
   document.getElementById('b-yuran-box').style.display='none'
   document.getElementById('b-preview').style.display='none'
   document.getElementById('b-btns').style.display='none'
-  _bYuran=0; _bDahRekod=false
+  _bYuran=0; _bDahRekod=false; _bBakiSelepas=null
   if(!kUid||!ym) return
 
   // Semak rekod bayaran sedia ada
@@ -445,6 +445,7 @@ async function onPilihBulanBayaran(){
     document.getElementById('b-dah-rekod').style.display='block'
     _bDahRekod=true
     _bYuran=dahRekod.yuran
+    _bBakiSelepas=_bBaki  // baki semasa = dah tolak yuran, guna terus
     document.getElementById('b-btns').innerHTML=
       '<button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>'
     document.getElementById('b-btns').style.display='block'
@@ -502,6 +503,7 @@ async function simpanTolakYuran(){
       try{ await api({action:'setBayaranRekod',keluargaUid:kUid,ym,yuran:_bYuran}) }catch(e){}
     }
     _bBaki=baruBaki
+    _bBakiSelepas=baruBaki
     showBakiBox('b-baki-box','b-baki-amt',baruBaki)
     // Refresh top up jika keluarga sama
     if(document.getElementById('tu-keluarga').value===kUid){
@@ -527,7 +529,7 @@ function hantarInvoiceWA(){
   if(!k){ toast('Keluarga tidak dijumpai!','err'); return }
   const anak=CACHE.pelajar.filter(p=>p.keluargaUid===kUid)
   const rekods=CACHE.rekod.filter(r=>r.tarikh&&r.tarikh.slice(0,7)===ym&&anak.some(p=>p.uid===r.pelajarUid))
-  const baruBaki=_bBaki-_bYuran
+  const baruBaki=_bBakiSelepas!==null ? _bBakiSelepas : _bBaki-_bYuran
   let msg='Allahumma solli ala Saidina Muhammad \u{1F339}\n\n'
   msg+='Assalamualaikum w.b.t,\n\n'
   msg+='Terima kasih *'+k.nama+'* atas pembayaran yuran mengaji bagi bulan *'+fmtBulan(ym)+'*.\n\n'
