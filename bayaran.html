@@ -572,10 +572,10 @@ function hantarInvoiceWA(){
   msg+='─'.repeat(28)+'\n'
   if(baruBaki>=0){
     msg+=baruBaki>0
-      ?'\u{1F49A} Baki Wallet: *'+fmtRM(baruBaki)+'*\n\nBayaran selesai. Terima kasih! \u{1F64F}'
+      ?'\u{1F49A} Baki Terlebih Bayar: *'+fmtRM(baruBaki)+'*\n\nBayaran selesai. Terima kasih! \u{1F64F}'
       :'\u2705 Yuran telah diselesaikan sepenuhnya. Terima kasih! \u{1F64F}'
   } else {
-    msg+='\u26A0\uFE0F Baki Perlu Dibayar: *'+fmtRM(Math.abs(baruBaki))+'*\n\nMohon dijelaskan secepat mungkin. Terima kasih! \u{1F64F}'
+    msg+='\u26A0\uFE0F Jumlah Perlu Dibayar: *'+fmtRM(Math.abs(baruBaki))+'*\n Terima kasih! \u{1F64F}'
   }
   const tel=k.tel.replace(/\D/g,'')
   window.open('https://wa.me/'+(tel.startsWith('0')?'6'+tel:tel)+'?text='+encodeURIComponent(msg),'_blank')
