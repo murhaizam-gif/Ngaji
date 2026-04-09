@@ -494,8 +494,33 @@ async function simpanTolakYuran(){
   if(!ym){ toast('Sila pilih bulan!','err'); return }
   if(_bDahRekod){ toast('Yuran bulan ini sudah direkod!','err'); return }
   const baruBaki=_bBaki-_bYuran
-  showOverlay('Menyimpan...')
+  showOverlay('Mengesahkan...')
   try{
+    // Validate dengan Sheets dulu — elak double rekod dari 2 device
+    if(SCRIPT_URL){
+      try{
+        const cek=await api({action:'checkBayaranRekod',keluargaUid:kUid,ym})
+        if(cek.ada){
+          // Dah ada dalam Sheets — kemaskini IDB dan block
+          await dbPut('bayaran_rekod',{uid:kUid+'|'+ym,keluargaUid:kUid,ym,yuran:cek.yuran||_bYuran,ts:Date.now()})
+          _bDahRekod=true
+          hideOverlay()
+          document.getElementById('b-dah-rekod').style.display='block'
+          document.getElementById('b-yuran-box').style.display='none'
+          document.getElementById('b-preview').style.display='none'
+          document.getElementById('b-btns').innerHTML=
+            '<button class="btn btn-wa" onclick="hantarInvoiceWA()">📲 Hantar WhatsApp</button>'
+          document.getElementById('b-btns').style.display='block'
+          toast('⚠️ Yuran bulan ini dah direkod di device lain!','warn')
+          return
+        }
+      }catch(e){
+        hideOverlay()
+        toast('❌ Gagal mengesahkan dengan server. Cuba semula.','err')
+        return
+      }
+    }
+    showOverlay('Menyimpan...')
     await setWallet(kUid,baruBaki)
     // Simpan rekod bayaran — cegah duplicate
     await dbPut('bayaran_rekod',{uid:kUid+'|'+ym,keluargaUid:kUid,ym,yuran:_bYuran,ts:Date.now()})
