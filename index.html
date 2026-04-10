@@ -36,7 +36,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* TABS */
-.tab-nav{display:flex;background:var(--card);border-bottom:2px solid var(--border);overflow-x:auto;scrollbar-width:none;position:fixed;top:98px;left:0;right:0;z-index:100;box-shadow:var(--shadow)}
+.tab-nav{display:flex;background:var(--card);border-bottom:2px solid var(--border);overflow-x:auto;scrollbar-width:none;position:fixed;top:68px;left:0;right:0;z-index:100;box-shadow:var(--shadow)}
 .tab-nav::-webkit-scrollbar{display:none}
 .tab-btn{flex:1;min-width:58px;padding:9px 3px 8px;background:none;border:none;color:var(--muted);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap}
 .tab-btn.active{color:var(--hijau);border-bottom-color:var(--hijau)}
@@ -268,6 +268,7 @@ textarea{resize:vertical;min-height:65px;line-height:1.5}
     <div class="card-title">✏️ Rekod Sesi Pelajar</div>
 
     <label>Pilih Pelajar</label>
+    <input type="text" id="r-cari-pelajar" placeholder="🔍 Cari nama pelajar..." oninput="filterDropPelajar()" autocomplete="off" style="margin-bottom:6px">
     <select id="r-pelajar" onchange="onPilihPelajar()"><option value="">-- Pilih Pelajar --</option></select>
     <div id="r-fam-info" style="font-size:11px;color:var(--biru);font-weight:700;margin-top:5px;display:none"></div>
 
@@ -811,7 +812,7 @@ async function showTab(name){
   document.getElementById('tc-'+name).classList.add('active')
   document.getElementById('tab-'+name).classList.add('active')
   if(name==='papan')    renderPapan()
-  if(name==='rekod')    { isikanDropPelajar('r-pelajar'); updatePreview() }
+  if(name==='rekod')    { document.getElementById('r-cari-pelajar').value=''; isikanDropPelajar('r-pelajar'); updatePreview() }
   if(name==='keluarga') renderKeluarga()
 }
 
@@ -973,6 +974,23 @@ function isikanDropPelajar(id){
   const cur=sel.value
   const pre=id==='f-pelajar'?'<option value="">Semua Pelajar</option>':'<option value="">-- Pilih Pelajar --</option>'
   sel.innerHTML=pre+CACHE.pelajar.map(p=>{
+    const k=CACHE.keluarga.find(x=>x.uid===p.keluargaUid)
+    return '<option value="'+p.uid+'">'+(k?p.nama+' ('+k.nama+')':p.nama)+'</option>'
+  }).join('')
+  if(cur) sel.value=cur
+}
+
+function filterDropPelajar(){
+  const cari=document.getElementById('r-cari-pelajar').value.toLowerCase().trim()
+  const sel=document.getElementById('r-pelajar')
+  const cur=sel.value
+  const filtered=cari
+    ? CACHE.pelajar.filter(p=>{
+        const k=CACHE.keluarga.find(x=>x.uid===p.keluargaUid)
+        return p.nama.toLowerCase().includes(cari)||(k&&k.nama.toLowerCase().includes(cari))
+      })
+    : CACHE.pelajar
+  sel.innerHTML='<option value="">-- Pilih Pelajar --</option>'+filtered.map(p=>{
     const k=CACHE.keluarga.find(x=>x.uid===p.keluargaUid)
     return '<option value="'+p.uid+'">'+(k?p.nama+' ('+k.nama+')':p.nama)+'</option>'
   }).join('')
