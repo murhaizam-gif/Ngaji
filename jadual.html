@@ -249,12 +249,47 @@ function showOverlay(msg='Menyimpan...'){ document.getElementById('overlay-msg')
 function hideOverlay(){ document.getElementById('overlay').classList.remove('show') }
 
 /* ════════════════════════════════
+   CONFIG
+════════════════════════════════ */
+function getScriptURL(){
+  const param=new URLSearchParams(window.location.search).get('url')
+  if(param){ localStorage.setItem('mgj_url',param); return param }
+  return localStorage.getItem('mgj_url')||''
+}
+let SCRIPT_URL=getScriptURL()
+
+async function api(body){
+  if(!SCRIPT_URL) throw new Error('No URL')
+  const resp=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(body)})
+  const data=await resp.json()
+  if(!data.ok) throw new Error(data.msg||'Ralat')
+  return data
+}
+
+/* ════════════════════════════════
    LOAD DATA
 ════════════════════════════════ */
 async function loadData(){
+  // Load dari IDB dulu — serta-merta
   const[k,p,j]=await Promise.all([dbGetAll('keluarga'),dbGetAll('pelajar'),dbGetAll('jadual')])
   CACHE.keluarga=k; CACHE.pelajar=p; JADUAL=j
   populateModalPelajar()
+
+  // Kalau IDB kosong, sync dari Sheets
+  if((!k.length||!p.length) && SCRIPT_URL){
+    showOverlay('Memuatkan data...')
+    try{
+      const[rK,rP]=await Promise.all([api({action:'getKeluarga'}),api({action:'getPelajar'})])
+      const keluarga=rK.data||[]; const pelajar=rP.data||[]
+      await Promise.all([
+        ...keluarga.map(x=>dbPut('keluarga',x)),
+        ...pelajar.map(x=>dbPut('pelajar',x))
+      ])
+      CACHE.keluarga=keluarga; CACHE.pelajar=pelajar
+      populateModalPelajar()
+    }catch(e){ toast('Gagal load data dari server','err') }
+    finally{ hideOverlay() }
+  }
 }
 
 /* ════════════════════════════════
