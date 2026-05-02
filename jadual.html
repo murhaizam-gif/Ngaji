@@ -109,6 +109,7 @@ input:focus,select:focus{border-color:var(--hijau);background:#fff}
     <a href="index.html" class="hdr-back">←</a>
     <div class="hdr-text"><h1>Jadual</h1><p>Kelas &amp; Reminder</p></div>
     <div class="hdr-right">
+      <button onclick="syncData()" id="btnSync" style="width:34px;height:34px;background:rgba(255,255,255,0.13);border:1.5px solid rgba(255,255,255,0.2);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:#fff;flex-shrink:0">🔄</button>
       <div class="hdr-date" id="hdrDate"></div>
     </div>
   </div>
@@ -292,9 +293,26 @@ async function loadData(){
   }
 }
 
-/* ════════════════════════════════
-   HARI TABS
-════════════════════════════════ */
+async function syncData(){
+  if(!SCRIPT_URL){ toast('Tiada URL Apps Script!','err'); return }
+  const btn=document.getElementById('btnSync')
+  btn.textContent='⏳'; btn.style.pointerEvents='none'
+  showOverlay('Menyegerakkan data...')
+  try{
+    const[rK,rP]=await Promise.all([api({action:'getKeluarga'}),api({action:'getPelajar'})])
+    const keluarga=rK.data||[]; const pelajar=rP.data||[]
+    await Promise.all([
+      ...keluarga.map(x=>dbPut('keluarga',x)),
+      ...pelajar.map(x=>dbPut('pelajar',x))
+    ])
+    CACHE.keluarga=keluarga; CACHE.pelajar=pelajar
+    populateModalPelajar()
+    renderJadual()
+    renderReminder()
+    toast('✅ Data berjaya disegerakkan!')
+  }catch(e){ toast('❌ Gagal sync: '+e.message,'err') }
+  finally{ hideOverlay(); btn.textContent='🔄'; btn.style.pointerEvents='auto' }
+}
 function tunjukHari(hari){
   hariAktif=hari
   HARI_LIST.forEach(h=>{
