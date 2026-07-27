@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Padam Rekod — Kelas Mengaji</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+:root{
+  --bg:#f0ede8;--card:#fff;--border:#e2ddd6;
+  --hijau:#2d6a4f;--hijau-lg:#52b788;--hijau-lt:#d8f3dc;
+  --emas:#b5830a;--emas-lt:#fef3c7;
+  --merah:#c0392b;--merah-lt:#fdecea;
+  --text:#1c1a17;--muted:#7a6e62;
+  --shadow:0 2px 14px rgba(0,0,0,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-top:68px}
+
+.header{background:linear-gradient(135deg,var(--hijau) 0%,#1b4332 100%);padding:13px 16px;position:fixed;top:0;left:0;right:0;z-index:200;box-shadow:0 4px 20px rgba(45,106,79,0.4)}
+.hdr{display:flex;align-items:center;gap:11px}
+.hdr-back{width:36px;height:36px;background:rgba(255,255,255,0.13);border:1.5px solid rgba(255,255,255,0.2);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:#fff;text-decoration:none;flex-shrink:0}
+.hdr-text h1{font-size:16px;font-weight:900;color:#fff}
+.hdr-text p{font-size:10px;color:rgba(255,255,255,0.55);font-family:'JetBrains Mono',monospace;margin-top:1px}
+
+.page{padding:13px}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:15px;margin-bottom:11px;box-shadow:var(--shadow)}
+.card-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:13px}
+
+label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px;margin-top:12px}
+label:first-child{margin-top:0}
+input,select{width:100%;background:var(--bg);border:2px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;outline:none;transition:border-color .2s;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--hijau);background:#fff}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:13px 18px;border-radius:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;border:none;transition:all .15s;width:100%;margin-top:11px}
+.btn:active{transform:scale(.96)}
+.btn-hijau{background:var(--hijau);color:#fff;box-shadow:0 4px 14px rgba(45,106,79,.3)}
+.btn-merah{background:var(--merah);color:#fff;box-shadow:0 4px 14px rgba(192,57,43,.25)}
+.btn-outline{background:transparent;border:2px solid var(--border);color:var(--muted)}
+
+/* REKOD ITEM */
+.rekod-item{background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:13px;margin-bottom:8px}
+.rekod-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.rekod-nama{font-size:13px;font-weight:800}
+.rekod-tarikh{font-size:11px;font-weight:700;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace}
+.rekod-keluarga{font-size:11px;font-weight:600;color:var(--muted);margin-top:2px}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:800}
+.badge-sesi{background:var(--hijau-lt);color:var(--hijau)}
+.rekod-detail{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.detail-chip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:var(--muted)}
+.rekod-yuran{font-size:15px;font-weight:900;color:var(--emas);font-family:'JetBrains Mono',monospace;margin-top:8px}
+.rekod-catatan{font-size:11px;color:var(--muted);font-weight:600;margin-top:6px;font-style:italic}
+
+.empty{text-align:center;padding:30px 16px;color:var(--muted)}
+.empty-ico{font-size:42px;margin-bottom:9px;opacity:.35}
+.empty p{font-size:12px;font-weight:600;line-height:1.7}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.overlay.show{display:flex}
+.spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay-msg{color:#fff;font-size:13px;font-weight:700}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--hijau);color:#fff;padding:10px 22px;border-radius:22px;font-size:12px;font-weight:800;z-index:999;transition:transform .3s;white-space:nowrap;box-shadow:0 6px 24px rgba(45,106,79,.4)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--merah)}
+
+/* CONFIRM BOX */
+.confirm-box{background:var(--merah-lt);border:1.5px solid var(--merah);border-radius:12px;padding:14px;margin-top:10px;display:none}
+.confirm-box.show{display:block}
+.confirm-title{font-size:12px;font-weight:800;color:var(--merah);margin-bottom:4px}
+.confirm-sub{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:12px;line-height:1.6}
+.confirm-btns{display:flex;gap:8px}
+.confirm-btns .btn{margin-top:0;flex:1;padding:11px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="hdr">
+    <a href="index.html" class="hdr-back">←</a>
+    <div class="hdr-text"><h1>Padam Rekod</h1><p>Cari &amp; Padam Satu Rekod</p></div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- FILTER -->
+  <div class="card">
+    <div class="card-title">🔍 Cari Rekod</div>
+    <label>Cari Nama Pelajar</label>
+    <input type="text" id="f-cari" placeholder="Taip nama pelajar..." oninput="filterPelajar()" autocomplete="off" style="margin-bottom:6px">
+    <select id="f-pelajar" onchange="onPilihPelajar()">
+      <option value="">-- Pilih Pelajar --</option>
+    </select>
+    <label>Tarikh Spesifik</label>
+    <input type="date" id="f-tarikh" onchange="cariRekod()">
+    <button class="btn btn-hijau" onclick="cariRekod()">🔍 Cari Rekod</button>
+  </div>
+
+  <!-- HASIL CARIAN -->
+  <div id="hasil-carian"></div>
+
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <div class="overlay-msg" id="overlay-msg">Memuatkan...</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════
+   CONFIG
+════════════════════════════════ */
+function getScriptURL(){
+  const param=new URLSearchParams(window.location.search).get('url')
+  if(param){ localStorage.setItem('mgj_url',param); return param }
+  return localStorage.getItem('mgj_url')||''
+}
+let SCRIPT_URL=getScriptURL()
+
+async function api(body){
+  if(!SCRIPT_URL) throw new Error('Tiada URL')
+  const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(body)})
+  const d=await r.json()
+  if(!d.ok) throw new Error(d.msg||'Ralat')
+  return d
+}
+
+/* ════════════════════════════════
+   INDEXEDDB
+════════════════════════════════ */
+const DB_NAME='mgj_db', DB_VER=6
+let _db=null
+
+function openDB(){
+  if(_db) return Promise.resolve(_db)
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open(DB_NAME,DB_VER)
+    req.onupgradeneeded=e=>{
+      const db=e.target.result
+      if(!db.objectStoreNames.contains('keluarga'))     db.createObjectStore('keluarga',{keyPath:'uid'})
+      if(!db.objectStoreNames.contains('pelajar'))      db.createObjectStore('pelajar',{keyPath:'uid'})
+      if(!db.objectStoreNames.contains('rekod')){
+        const s=db.createObjectStore('rekod',{keyPath:'uid'})
+        s.createIndex('pelajarTarikh','_pt',{unique:true})
+        s.createIndex('tarikh','tarikh')
+      }
+      if(!db.objectStoreNames.contains('meta'))          db.createObjectStore('meta',{keyPath:'k'})
+      if(!db.objectStoreNames.contains('uid_log'))       db.createObjectStore('uid_log',{keyPath:'uid'})
+      if(!db.objectStoreNames.contains('tombstone'))     db.createObjectStore('tombstone',{keyPath:'uid'})
+      if(!db.objectStoreNames.contains('wallet'))        db.createObjectStore('wallet',{keyPath:'keluargaUid'})
+      if(!db.objectStoreNames.contains('bayaran_rekod')) db.createObjectStore('bayaran_rekod',{keyPath:'uid'})
+      if(!db.objectStoreNames.contains('jadual'))        db.createObjectStore('jadual',{keyPath:'uid'})
+    }
+    req.onsuccess=e=>{ _db=e.target.result; res(_db) }
+    req.onerror=e=>rej(e.target.error)
+  })
+}
+
+function dbGetAll(store){ return openDB().then(db=>new Promise((res,rej)=>{ const r=db.transaction(store,'readonly').objectStore(store).getAll(); r.onsuccess=e=>res(e.target.result||[]); r.onerror=e=>rej(e.target.error) })) }
+function dbPut(store,obj){ return openDB().then(db=>new Promise((res,rej)=>{ const r=db.transaction(store,'readwrite').objectStore(store).put(obj); r.onsuccess=e=>res(); r.onerror=e=>rej(e.target.error) })) }
+function dbDelete(store,key){ return openDB().then(db=>new Promise((res,rej)=>{ const r=db.transaction(store,'readwrite').objectStore(store).delete(key); r.onsuccess=e=>res(); r.onerror=e=>rej(e.target.error) })) }
+
+/* ════════════════════════════════
+   CACHE
+════════════════════════════════ */
+let CACHE={keluarga:[],pelajar:[],rekod:[]}
+
+async function loadData(){
+  const[k,p,r]=await Promise.all([dbGetAll('keluarga'),dbGetAll('pelajar'),dbGetAll('rekod')])
+  CACHE.keluarga=k; CACHE.pelajar=p; CACHE.rekod=r
+  populatePelajar()
+}
+
+/* ════════════════════════════════
+   HELPERS
+════════════════════════════════ */
+const fmtRM=n=>'RM'+parseFloat(n||0).toFixed(2)
+
+function fmtTarikh(t){
+  if(!t) return '-'
+  const[y,m,d]=t.split('-')
+  const b=['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogos','Sep','Okt','Nov','Dis']
+  return d+' '+b[+m-1]+' '+y
+}
+
+function toast(msg,type=''){
+  const t=document.getElementById('toast')
+  t.textContent=msg; t.className='toast show'+(type?' '+type:'')
+  clearTimeout(window._tt)
+  window._tt=setTimeout(()=>t.className='toast',2800)
+}
+function showOverlay(msg='Memuatkan...'){ document.getElementById('overlay-msg').textContent=msg; document.getElementById('overlay').classList.add('show') }
+function hideOverlay(){ document.getElementById('overlay').classList.remove('show') }
+
+/* ════════════════════════════════
+   DROPDOWN PELAJAR
+════════════════════════════════ */
+function populatePelajar(cari=''){
+  const sel=document.getElementById('f-pelajar')
+  const cur=sel.value
+  const filtered=cari
+    ? CACHE.pelajar.filter(p=>{
+        const k=CACHE.keluarga.find(x=>x.uid===p.keluargaUid)
+        return p.nama.toLowerCase().includes(cari)||(k&&k.nama.toLowerCase().includes(cari))
+      })
+    : CACHE.pelajar
+  sel.innerHTML='<option value="">-- Pilih Pelajar --</option>'+
+    filtered.map(p=>{
+      const k=CACHE.keluarga.find(x=>x.uid===p.keluargaUid)
+      return '<option value="'+p.uid+'">'+(k?p.nama+' ('+k.nama+')':p.nama)+'</option>'
+    }).join('')
+  if(cur) sel.value=cur
+}
+
+function filterPelajar(){
+  populatePelajar(document.getElementById('f-cari').value.toLowerCase().trim())
+}
+
+function onPilihPelajar(){
+  document.getElementById('hasil-carian').innerHTML=''
+}
+
+/* ════════════════════════════════
+   CARI REKOD
+════════════════════════════════ */
+function cariRekod(){
+  const pUid=document.getElementById('f-pelajar').value
+  const tarikh=document.getElementById('f-tarikh').value
+  const el=document.getElementById('hasil-carian')
+
+  if(!pUid&&!tarikh){
+    el.innerHTML='<div class="empty"><div class="empty-ico">🔍</div><p>Pilih pelajar atau tarikh<br>untuk cari rekod</p></div>'
+    return
+  }
+
+  let rekods=[...CACHE.rekod]
+  if(pUid)   rekods=rekods.filter(r=>r.pelajarUid===pUid)
+  if(tarikh) rekods=rekods.filter(r=>r.tarikh===tarikh)
+  rekods.sort((a,b)=>b.tarikh.localeCompare(a.tarikh))
+
+  if(!rekods.length){
+    el.innerHTML='<div class="card"><div class="empty"><div class="empty-ico">📭</div><p>Tiada rekod ditemui</p></div></div>'
+    return
+  }
+
+  el.innerHTML='<div class="card">'+
+    '<div class="card-title">📋 Rekod Ditemui ('+rekods.length+')</div>'+
+    rekods.map(r=>{
+      const p=CACHE.pelajar.find(x=>x.uid===r.pelajarUid)
+      const k=p?CACHE.keluarga.find(x=>x.uid===p.keluargaUid):null
+      return `
+      <div class="rekod-item" id="ri-${r.uid}">
+        <div class="rekod-top">
+          <div>
+            <div class="rekod-nama">${r.pelajarNama||p?.nama||'?'}</div>
+            <div class="rekod-keluarga">👨‍👩‍👧‍👦 ${k?.nama||''}</div>
+            <div class="rekod-tarikh">📅 ${fmtTarikh(r.tarikh)}</div>
+          </div>
+          <span class="badge badge-sesi">${r.sesi} Sesi</span>
+        </div>
+        <div class="rekod-yuran">💰 ${fmtRM(r.yuran)}</div>
+        ${r.muka||r.ayat||r.surah?`<div class="rekod-detail">
+          ${r.muka?`<span class="detail-chip">📖 m/s ${r.muka}</span>`:''}
+          ${r.ayat?`<span class="detail-chip">Ayat ${r.ayat}</span>`:''}
+          ${r.surah?`<span class="detail-chip">${r.surah}</span>`:''}
+        </div>`:''}
+        ${r.catatan?`<div class="rekod-catatan">📝 ${r.catatan}</div>`:''}
+        <div class="confirm-box" id="cb-${r.uid}">
+          <div class="confirm-title">⚠️ Sahkan Padam</div>
+          <div class="confirm-sub">Rekod <strong>${r.pelajarNama||p?.nama}</strong> pada <strong>${fmtTarikh(r.tarikh)}</strong> akan dipadam. Tindakan ini tidak boleh dibuat alik.</div>
+          <div class="confirm-btns">
+            <button class="btn btn-outline" onclick="batalPadam('${r.uid}')">Batal</button>
+            <button class="btn btn-merah" onclick="sahkanPadam('${r.uid}')">🗑️ Ya, Padam</button>
+          </div>
+        </div>
+        <button class="btn btn-merah" onclick="tunjukConfirm('${r.uid}')">🗑️ Padam Rekod Ini</button>
+      </div>`
+    }).join('')+
+  '</div>'
+}
+
+/* ════════════════════════════════
+   PADAM
+════════════════════════════════ */
+function tunjukConfirm(rUid){
+  // Sembunyikan semua confirm box lain dulu
+  document.querySelectorAll('.confirm-box').forEach(el=>el.classList.remove('show'))
+  document.getElementById('cb-'+rUid).classList.add('show')
+  // Scroll ke confirm box
+  document.getElementById('cb-'+rUid).scrollIntoView({behavior:'smooth',block:'center'})
+}
+
+function batalPadam(rUid){
+  document.getElementById('cb-'+rUid).classList.remove('show')
+}
+
+async function sahkanPadam(rUid){
+  showOverlay('Memadam rekod...')
+  try{
+    // Padam dari IDB
+    await dbDelete('rekod',rUid)
+    // Log uid supaya tak sync balik
+    await dbPut('uid_log',{uid:rUid, ts:Date.now()})
+    await dbPut('tombstone',{uid:rUid, ts:Date.now()})
+    // Padam dari Sheets
+    if(SCRIPT_URL){
+      try{ await api({action:'deleteRekod', uid:rUid}) }
+      catch(e){ console.warn('Sheets delete gagal, pending retry') }
+    }
+    // Update cache dan buang dari UI
+    CACHE.rekod=CACHE.rekod.filter(r=>r.uid!==rUid)
+    const el=document.getElementById('ri-'+rUid)
+    if(el){ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300) }
+    hideOverlay()
+    toast('🗑️ Rekod berjaya dipadam','err')
+  }catch(e){
+    hideOverlay()
+    toast('❌ Gagal padam: '+e.message,'err')
+  }
+}
+
+/* ════════════════════════════════
+   INIT
+════════════════════════════════ */
+async function init(){
+  await loadData()
+  // Set tarikh hari ini sebagai default
+  const now=new Date()
+  const ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')
+  document.getElementById('f-tarikh').value=ym
+}
+
+init()
+</script>
+</body>
+</html>
